@@ -1,0 +1,6 @@
+.mcp.json
+
+# Rust
+target/
+**target/
+.frink

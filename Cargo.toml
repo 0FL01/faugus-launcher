@@ -1,0 +1,46 @@
+[package]
+name = "faugus-launcher-rs"
+version = "0.0.1"
+edition = "2021"
+license = "MIT"
+authors = ["@0FL01"]
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+unwrap_used = "forbid"
+too_many_lines = "forbid" 
+too_many_arguments = "forbid"
+
+[dependencies]
+iced = { version = "0.13", features = ["image", "svg", "tokio", "advanced"] }
+tokio = { version = "1.36", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+keyvalues-serde = "0.1"
+directories = "5.0"
+sysinfo = "0.30"
+fs2 = "0.4"
+open = "5.1"
+reqwest = { version = "0.12", features = ["json", "stream", "rustls-tls"] }
+futures = "0.3"
+flate2 = "1.0"
+tar = "0.4"
+anyhow = "1.0"
+image = "0.25"
+walkdir = "2.5"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+uuid = { version = "1.10", features = ["v4", "serde"] }
+new-vdf-parser = "0.2.0"
+tray-icon = "0.21"
+muda = "0.15"
+
+[target.'cfg(unix)'.dependencies]
+nix = { version = "0.29", features = ["process", "signal"] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
