@@ -52,6 +52,7 @@ pub enum Message {
     HideShowClicked,
     DuplicateClicked,
     KillProcessClicked,
+    KillAllProcesses,
     SettingsClicked,
     SearchChanged(String),
     Tick,
@@ -294,10 +295,34 @@ impl FaugusLauncher {
                         match &msg {
                             AddGameMessage::Confirm => {
                                 if dialog.validate() {
-                                    let game = dialog.get_game();
+                                    let mut game = dialog.get_game();
                                     let add_steam_shortcut = dialog.shortcut_steam();
                                     let add_desktop_shortcut = dialog.shortcut_desktop();
                                     let add_appmenu_shortcut = dialog.shortcut_appmenu();
+
+                                    // Handle banner
+                                    if let Some(banner_path) = &game.banner {
+                                        if banner_path.exists() {
+                                            let banners_dir = config::paths::Paths::banners_dir();
+                                            let _ = std::fs::create_dir_all(&banners_dir);
+                                            let extension = banner_path
+                                                .extension()
+                                                .and_then(|e| e.to_str())
+                                                .unwrap_or("png");
+                                            let target_path = banners_dir
+                                                .join(format!("{}.{}", game.gameid, extension));
+
+                                            if banner_path != &target_path {
+                                                if let Err(e) =
+                                                    std::fs::copy(banner_path, &target_path)
+                                                {
+                                                    error!("Failed to copy banner: {}", e);
+                                                } else {
+                                                    game.banner = Some(target_path);
+                                                }
+                                            }
+                                        }
+                                    }
 
                                     // Save the game
                                     if let Err(e) = game.save() {
@@ -600,6 +625,11 @@ impl FaugusLauncher {
                         }
                     }
                 }
+                Task::none()
+            }
+            Message::KillAllProcesses => {
+                info!("Killing all game processes");
+                self.main_window.launch_controller().terminate_all();
                 Task::none()
             }
             Message::TrayEvent(event) => {

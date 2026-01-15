@@ -54,6 +54,7 @@ pub struct Game {
     pub addapp_bat: String,
 
     /// Path to banner image
+    #[serde(default)]
     pub banner: Option<PathBuf>,
 
     /// Lossless scaling enabled
@@ -243,6 +244,7 @@ pub struct GameConfig {
     pub addapp_checkbox: bool,
     pub addapp: String,
     pub addapp_bat: String,
+    #[serde(default)]
     pub banner: Option<PathBuf>,
     pub lossless_enabled: bool,
     pub lossless_multiplier: u32,

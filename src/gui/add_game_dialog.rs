@@ -97,6 +97,10 @@ pub enum AddGameMessage {
     BrowseAddApp,
     /// Additional app picked
     AddAppPicked(Option<PathBuf>),
+    /// Browse for banner
+    BrowseBanner,
+    /// Banner picked
+    BannerPicked(Option<PathBuf>),
     /// Open Protonfix URL in browser
     OpenProtonfixUrl,
     /// Lossless Scaling button clicked
@@ -142,6 +146,8 @@ pub struct AddGameDialog {
     game_arguments: String,
     /// Additional application path
     addapp_path: PathBuf,
+    /// Banner image path
+    banner_path: Option<PathBuf>,
 
     // Checkboxes
     /// Enable MangoHud
@@ -199,6 +205,7 @@ impl AddGameDialog {
             launch_arguments: String::new(),
             game_arguments: String::new(),
             addapp_path: PathBuf::new(),
+            banner_path: None,
 
             mangohud: config.mangohud,
             gamemode: config.gamemode,
@@ -241,6 +248,7 @@ impl AddGameDialog {
         } else {
             PathBuf::new()
         };
+        dialog.banner_path = game.banner;
 
         // Load runner
         let runners = Self::get_available_runners();
@@ -356,6 +364,14 @@ impl AddGameDialog {
             AddGameMessage::AddAppPicked(path) => {
                 if let Some(path) = path {
                     self.addapp_path = path;
+                }
+            }
+            AddGameMessage::BrowseBanner => {
+                return Task::perform(file_picker::pick_file(), AddGameMessage::BannerPicked);
+            }
+            AddGameMessage::BannerPicked(path) => {
+                if let Some(path) = path {
+                    self.banner_path = Some(path);
                 }
             }
             AddGameMessage::OpenProtonfixUrl => {
@@ -508,7 +524,7 @@ impl AddGameDialog {
             addapp_checkbox,
             addapp,
             addapp_bat,
-            banner: None, // TODO: Implement banner selection
+            banner: self.banner_path.clone(),
             lossless_enabled: self.lossless_enabled,
             lossless_multiplier: self.lossless_multiplier,
             lossless_flow: self.lossless_flow,
@@ -546,6 +562,7 @@ impl AddGameDialog {
         let launcher_type_section = self.view_launcher_type_section(i18n);
         let runner_section = self.view_runner_section(i18n);
         let protonfix_section = self.view_protonfix_section(i18n);
+        let banner_section = self.view_banner_section(i18n);
         let arguments_section = self.view_arguments_section(i18n);
         let options_section = self.view_options_section(i18n);
         let tools_section = self.view_tools_section(i18n);
@@ -564,6 +581,8 @@ impl AddGameDialog {
             runner_section,
             Space::with_height(Length::Fixed(10.0)),
             protonfix_section,
+            Space::with_height(Length::Fixed(10.0)),
+            banner_section,
             Space::with_height(Length::Fixed(10.0)),
             arguments_section,
             Space::with_height(Length::Fixed(10.0)),
@@ -680,6 +699,44 @@ impl AddGameDialog {
         ]
         .spacing(5)
         .into()
+    }
+
+    /// View the banner section
+    fn view_banner_section(&self, i18n: &I18n) -> Element<'_, AddGameMessage> {
+        let banner_display = self
+            .banner_path
+            .as_ref()
+            .map(|p| p.display().to_string())
+            .unwrap_or_else(|| i18n.t("No banner selected"));
+
+        let mut content = column![
+            text(i18n.t("Banner")).size(14),
+            Space::with_height(Length::Fixed(5.0)),
+            row![
+                text_input(&i18n.t("Banner path"), &banner_display).width(Length::Fill),
+                button(text("..."))
+                    .on_press(AddGameMessage::BrowseBanner)
+                    .width(Length::Fixed(50.0)),
+            ]
+            .spacing(5),
+        ]
+        .spacing(5);
+
+        if let Some(ref path) = self.banner_path {
+            if path.exists() {
+                content = content.push(
+                    container(
+                        iced::widget::image(path.clone())
+                            .width(Length::Fixed(230.0))
+                            .height(Length::Fixed(115.0)),
+                    )
+                    .padding(5)
+                    .style(container::bordered_box),
+                );
+            }
+        }
+
+        content.into()
     }
 
     /// View the arguments section

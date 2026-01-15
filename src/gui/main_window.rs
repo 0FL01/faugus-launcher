@@ -145,6 +145,44 @@ impl MainWindow {
             .into()
     }
 
+    /// Load medium icon for display (blocks mode)
+    fn load_medium_icon(&self, game_id: &str) -> Element<'_, Message> {
+        if let Some(icon_path) = self.get_icon_path(game_id) {
+            if icon_path.exists() {
+                return container(
+                    image(icon_path.clone())
+                        .width(Length::Fixed(64.0))
+                        .height(Length::Fixed(64.0)),
+                )
+                .align_x(iced::alignment::Horizontal::Center)
+                .into();
+            }
+        }
+
+        container(text("🎮").size(48))
+            .align_x(iced::alignment::Horizontal::Center)
+            .into()
+    }
+
+    /// Load large icon for display (banners mode fallback)
+    fn load_large_icon(&self, game_id: &str) -> Element<'_, Message> {
+        if let Some(icon_path) = self.get_icon_path(game_id) {
+            if icon_path.exists() {
+                return container(
+                    image(icon_path.clone())
+                        .width(Length::Fixed(128.0))
+                        .height(Length::Fixed(128.0)),
+                )
+                .align_x(iced::alignment::Horizontal::Center)
+                .into();
+            }
+        }
+
+        container(text("🎮").size(96))
+            .align_x(iced::alignment::Horizontal::Center)
+            .into()
+    }
+
     /// Update the window state
     pub fn update(&mut self, message: Message) -> Task<Message> {
         match message {
@@ -419,25 +457,21 @@ impl MainWindow {
                     let is_hidden = game.hidden;
 
                     // Load icon for this game (larger size for blocks)
-                    let icon = if let Some(icon_path) = self.get_icon_path(&game.gameid) {
-                        if icon_path.exists() {
+                    let icon = if let Some(ref banner_path) = game.banner {
+                        if banner_path.exists() {
                             Element::from(
                                 container(
-                                    image(iced::widget::image::Handle::from_path(icon_path))
-                                        .width(Length::Fixed(64.0))
-                                        .height(Length::Fixed(64.0)),
+                                    image(iced::widget::image::Handle::from_path(banner_path))
+                                        .width(Length::Fixed(180.0))
+                                        .height(Length::Fixed(90.0)),
                                 )
                                 .align_x(iced::alignment::Horizontal::Center),
                             )
                         } else {
-                            container(text("🎮").size(48))
-                                .align_x(iced::alignment::Horizontal::Center)
-                                .into()
+                            self.load_medium_icon(&game.gameid)
                         }
                     } else {
-                        container(text("🎮").size(48))
-                            .align_x(iced::alignment::Horizontal::Center)
-                            .into()
+                        self.load_medium_icon(&game.gameid)
                     };
 
                     // Dim the title if hidden
@@ -488,25 +522,21 @@ impl MainWindow {
                 let is_hidden = game.hidden;
 
                 // Load large icon for banner
-                let icon = if let Some(icon_path) = self.get_icon_path(&game.gameid) {
-                    if icon_path.exists() {
+                let icon = if let Some(ref banner_path) = game.banner {
+                    if banner_path.exists() {
                         Element::from(
                             container(
-                                image(iced::widget::image::Handle::from_path(icon_path))
-                                    .width(Length::Fixed(128.0))
-                                    .height(Length::Fixed(128.0)),
+                                image(iced::widget::image::Handle::from_path(banner_path))
+                                    .width(Length::Fixed(440.0))
+                                    .height(Length::Fixed(220.0)),
                             )
                             .align_x(iced::alignment::Horizontal::Center),
                         )
                     } else {
-                        container(text("🎮").size(96))
-                            .align_x(iced::alignment::Horizontal::Center)
-                            .into()
+                        self.load_large_icon(&game.gameid)
                     }
                 } else {
-                    container(text("🎮").size(96))
-                        .align_x(iced::alignment::Horizontal::Center)
-                        .into()
+                    self.load_large_icon(&game.gameid)
                 };
 
                 // Dim the title if hidden
@@ -644,6 +674,11 @@ impl MainWindow {
             .padding(10)
             .width(Length::Fill);
 
+        let kill_all_button = button(text(self.i18n.t("Kill All")))
+            .on_press(Message::KillAllProcesses)
+            .padding(10)
+            .width(Length::Fill);
+
         column![
             search,
             play_kill_button,
@@ -654,6 +689,7 @@ impl MainWindow {
             hide_show_button,
             duplicate_button,
             settings_button,
+            kill_all_button,
         ]
         .spacing(10)
         .width(200)

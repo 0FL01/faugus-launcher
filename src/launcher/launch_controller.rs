@@ -135,6 +135,14 @@ impl GameLaunchController {
         }
     }
 
+    /// Terminate all running games
+    pub fn terminate_all(&self) {
+        let running = self.get_running_games();
+        for (title, _) in running {
+            let _ = self.terminate_game(&title);
+        }
+    }
+
     /// Update game status (call when process exits)
     pub fn on_process_exited(&self, title: &str) {
         info!("Game process exited: {}", title);

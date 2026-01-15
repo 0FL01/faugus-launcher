@@ -236,3 +236,27 @@ flowchart TD
 
 ### Status:
 Phase 1 is **COMPLETE**. The layout bug is fixed, and dialog buttons should now be visible and functional. Phase 2 (Context Menu), Phase 3 (Wine Tools), and Phase 4 (Kill All/Banners) are now **UNBLOCKED**.
+
+## Handover Note (Phase 4 Complete)
+
+### What was done:
+- **Kill All Processes**:
+    - Added `Message::KillAllProcesses` to `main.rs`.
+    - Implemented `terminate_all()` in `GameLaunchController` (`src/launcher/launch_controller.rs`), which iterates over all running games and terminates them.
+    - Added a "Kill All" button to the sidebar in `MainWindow` (`src/gui/main_window.rs`).
+- **Banner Management**:
+    - Updated `Game` and `GameConfig` structs in `src/config/game_config.rs` to include `#[serde(default)]` for the `banner` field, ensuring backward compatibility.
+    - Enhanced `AddGameDialog` (`src/gui/add_game_dialog.rs`) with a banner selection field, a "Browse" button (using `rfd`), and a live image preview.
+    - Implemented banner persistence: when a game is saved, the selected banner image is copied to `~/.config/faugus-launcher/banners/` and the path is updated in the game configuration.
+    - Updated `MainWindow` to display banners in both **Blocks** and **Banners** view modes, with proper fallbacks to icons if no banner is set.
+- **Quality Control**:
+    - `cargo check` passes successfully.
+    - `cargo fmt` applied.
+    - Clippy clean (excluding pre-existing unrelated warnings).
+
+### Technical Debt:
+- **Banner Aspect Ratio**: Banners are currently scaled to fixed sizes (440x220 for Banners mode, 180x90 for Blocks mode). Non-standard images might appear stretched.
+- **File Picker**: `rfd` is used for file picking, which is standard for Rust/Iced but might behave differently across desktop environments.
+
+### Status:
+Phase 4 is **COMPLETE**. The "Kill All" feature and Banner management are fully implemented and integrated.
