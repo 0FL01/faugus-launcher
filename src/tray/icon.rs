@@ -78,8 +78,14 @@ impl TrayIcon {
         Err(anyhow::anyhow!("No suitable tray icon found"))
     }
 
-    /// Load icon as bytes (for tray-icon crate)
-    pub fn load_icon_bytes(&self) -> Result<Vec<u8>> {
-        std::fs::read(&self.icon_path).context("Failed to read tray icon file")
+    /// Load icon as tray_icon::Icon
+    pub fn load_icon(&self) -> Result<tray_icon::Icon> {
+        let img = image::open(&self.icon_path).context("Failed to open tray icon image")?;
+        let rgba = img.to_rgba8();
+        let (width, height) = rgba.dimensions();
+        let rgba_raw = rgba.into_raw();
+
+        tray_icon::Icon::from_rgba(rgba_raw, width, height)
+            .context("Failed to create tray icon from RGBA")
     }
 }

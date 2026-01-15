@@ -3,4 +3,4 @@
 
 mod icon_manager;
 
-pub use icon_manager::{IconManager, IconSize};
+pub use icon_manager::IconManager;

@@ -86,17 +86,14 @@ pub struct AppConfig {
 
 /// Interface display modes
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Default)]
 pub enum InterfaceMode {
+    #[default]
     List,
     Blocks,
     Banners,
 }
 
-impl Default for InterfaceMode {
-    fn default() -> Self {
-        Self::List
-    }
-}
 
 impl Default for AppConfig {
     fn default() -> Self {

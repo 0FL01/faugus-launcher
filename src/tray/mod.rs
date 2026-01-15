@@ -5,9 +5,7 @@ mod icon;
 mod menu;
 mod tray;
 
-pub use icon::TrayIcon;
-pub use menu::TrayMenu;
-pub use tray::{SystemTray, TrayEvent, TrayMessage};
+pub use tray::{SystemTray, TrayEvent};
 
 use std::path::PathBuf;
 

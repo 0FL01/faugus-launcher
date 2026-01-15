@@ -3,4 +3,3 @@
 
 pub mod proton_manager;
 
-pub use proton_manager::{ProtonManager, PROTON_CONFIGS};

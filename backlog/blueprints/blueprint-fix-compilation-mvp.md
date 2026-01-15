@@ -108,34 +108,34 @@ flowchart TD
 
 | Node ID | Phase | Node Type | Goal | Files | Docs to Verify | Verification Tooling | Commands | Success Criteria | Failure States | On Failure | On Success |
 |---------|-------|-----------|------|-------|----------------|---------------------|----------|------------------|----------------|------------|------------|
-| A1 | 1 | Action | Wrap on_confirm/on_cancel in Box to break recursion | `src/gui/confirmation_dialog.rs:18-20` | N/A | N/A | cargo check | E0072, E0391 gone | Compile error persists | X1 | D1 |
-| D1 | 1 | Decision | Check if recursive type error resolved | N/A | N/A | cargo check output | cargo check | No E0072 | E0072 still present | X1 | A2 |
+| A1 | 1 | Action | Wrap on_confirm/on_cancel in Box to break recursion | `src/gui/confirmation_dialog.rs:18-20` | N/A | N/A | cargo check | E0072, E0391 gone | Compile error persists | X1 | DONE |
+| D1 | 1 | Decision | Check if recursive type error resolved | N/A | N/A | cargo check output | cargo check | No E0072 | E0072 still present | X1 | DONE |
 | X1 | 1 | DeadEnd | Circular dependency requires architecture redesign | N/A | N/A | N/A | N/A | N/A | Blocked | STOP | N/A |
-| A2 | 1 | Action | Change fn validate to pub fn validate | `src/gui/add_game_dialog.rs:334` | N/A | N/A | cargo check | E0624 gone | Method still private | L1 | D2 |
-| A3 | 2 | Action | Verify container::transparent exists in Iced 0.13 | N/A | `docs.rs/iced/0.13.1/iced/widget/container/fn.transparent.html` | tavily_extract | N/A | Docs confirm function | 404 or missing | X2 | D3 |
-| A4 | 2 | Action | Replace Container::Transparent with container::transparent | `src/gui/confirmation_dialog.rs:71,106`, `src/gui/main_window.rs:381,383,447,449,522,524`, `src/main.rs:538,565,592` | N/A | N/A | cargo check | E0433 Container gone | Errors remain | L2 | D4 |
-| A5 | 2 | Action | Replace Text::Color with closure style | `src/gui/add_game_dialog.rs:658`, `src/gui/main_window.rs:434`, `src/gui/proton_manager_dialog.rs:331`, `src/gui/settings_dialog.rs:345` | `docs.rs/iced/0.13.1/iced/widget/text/struct.Style.html` | N/A | cargo check | E0433 Text gone | Errors remain | L3 | D5 |
-| A6 | 2 | Action | Move placeholder from method to first arg of text_input | `src/gui/add_game_dialog.rs:510,525,545,583,602,610` | `docs.rs/iced/0.13.1/iced/widget/fn.text_input.html` | N/A | cargo check | E0599 placeholder gone | Errors remain | L4 | D6 |
-| A7 | 2 | Action | Implement double-click via timestamp state tracking | `src/gui/main_window.rs:389,455,529`, `src/gui/main_window.rs` (add state field) | N/A | N/A | cargo check | E0599 on_double_press gone | Complex state logic fails | L5 | D7 |
-| A8 | 2 | Action | Wrap i18n.t String in text() widget for button | `src/gui/add_game_dialog.rs:627` | N/A | N/A | cargo check | E0277 button gone | Type mismatch | L6 | D8 |
-| A9 | 3 | Action | Add use iced::Length import | `src/main.rs:15` | N/A | N/A | cargo check | E0433 Length gone | Import wrong | L7 | A10 |
-| A10 | 3 | Action | Change lossless_flow from u32 to bool in AddGameDialog | `src/gui/add_game_dialog.rs:108` | N/A | N/A | cargo check | E0308 type mismatch gone | Logic errors | L7 | A11 |
-| A11 | 3 | Action | Change find_largest_png param from &PathBuf to &Path | `src/icons/icon_manager.rs:199` | N/A | N/A | cargo check | E0308 Path/PathBuf gone | Signature mismatch | L7 | A12 |
-| A12 | 3 | Action | Rename show_hidden_games to show_hidden | `src/gui/main_window.rs:659` | N/A | N/A | cargo check | E0609 field error gone | Wrong field name | L7 | D9 |
-| A13 | 4 | Action | Replace Task::chain with task.map | `src/gui/main_window.rs:169,178` | `docs.rs/iced_runtime/0.13/iced_runtime/task/struct.Task.html` | N/A | cargo check | E0308 Task args gone | API changed | L8 | A14 |
-| A14 | 4 | Action | Add #[derive(PartialEq)] to GameProcess | `src/launcher/game_launcher.rs:16` | N/A | N/A | cargo check | E0369 PartialEq gone | Derive fails | L8 | D10 |
-| A15 | 5 | Action | Verify Icon::from_rgba and TrayIcon::new in tray-icon | N/A | `docs.rs/tray-icon/latest/tray_icon/struct.Icon.html`, `docs.rs/tray-icon/latest/tray_icon/struct.TrayIcon.html` | tavily_extract | N/A | Docs confirm API | 404 or missing | X3 | D11 |
-| A16 | 5 | Action | Create Icon then TrayIcon::new with TrayIconAttributes | `src/tray/tray.rs:87-105` | N/A | N/A | cargo check | E0599 from_rgba gone | API mismatch | L9 | A17 |
-| A17 | 5 | Action | Wrap tooltip in Some() | `src/tray/tray.rs:102,129,147` | N/A | N/A | cargo check | E0308 Option gone | Type error | L9 | A18 |
-| A18 | 5 | Action | Add notify-rust to Cargo.toml | `Cargo.toml` | `crates.io/crates/notify-rust` | cargo add | cargo check | Dependency added | Version conflict | L9 | A19 |
-| A19 | 5 | Action | Replace show_notification with notify-rust Notification | `src/tray/tray.rs:154-161` | `docs.rs/notify-rust/latest` | N/A | cargo check | E0599 show_notification gone | API differs | L9 | A20 |
-| A20 | 5 | Action | Remove ? from update_tooltip or change return type | `src/tray/tray.rs:120` | N/A | N/A | cargo check | E0277 ? operator gone | Logic error | L9 | D12 |
-| A21 | 6 | Action | Replace key.as_str() with &key or key.as_ref() | `src/locale/i18n.rs:607` | N/A | N/A | cargo check | E0658 unstable gone | Syntax error | L10 | A22 |
-| A22 | 6 | Action | Borrow relative with & in join calls | `src/locale/i18n.rs:53,54` | N/A | N/A | cargo check | E0382 moved value gone | Ownership error | L10 | A23 |
-| A23 | 6 | Action | Add type annotation to obj.clone() | `src/steam/shortcuts.rs:89` | N/A | N/A | cargo check | E0282 type inference gone | Wrong type | L10 | A24 |
-| A24 | 6 | Action | Add lifetime 'a to view_release_row | `src/gui/proton_manager_dialog.rs:407-411` | N/A | N/A | cargo check | Lifetime error gone | Lifetime mismatch | L10 | D13 |
-| A25 | 7 | Action | Run clippy for additional checks | All files | N/A | cargo clippy | cargo clippy | No errors | Clippy errors | L11 | D14 |
-| A26 | 7 | Action | Build release binary | All files | N/A | cargo build | cargo build --release | Binary created | Build fails | L12 | D15 |
+| A2 | 1 | Action | Change fn validate to pub fn validate | `src/gui/add_game_dialog.rs:334` | N/A | N/A | cargo check | E0624 gone | Method still private | L1 | DONE |
+| A3 | 2 | Action | Verify container::transparent exists in Iced 0.13 | N/A | `docs.rs/iced/0.13.1/iced/widget/container/fn.transparent.html` | tavily_extract | N/A | Docs confirm function | 404 or missing | X2 | DONE |
+| A4 | 2 | Action | Replace Container::Transparent with container::transparent | `src/gui/confirmation_dialog.rs:71,106`, `src/gui/main_window.rs:381,383,447,449,522,524`, `src/main.rs:538,565,592` | N/A | N/A | cargo check | E0433 Container gone | Errors remain | L2 | DONE |
+| A5 | 2 | Action | Replace Text::Color with closure style | `src/gui/add_game_dialog.rs:658`, `src/gui/main_window.rs:434`, `src/gui/proton_manager_dialog.rs:331`, `src/gui/settings_dialog.rs:345` | `docs.rs/iced/0.13.1/iced/widget/text/struct.Style.html` | N/A | cargo check | E0433 Text gone | Errors remain | L3 | DONE |
+| A6 | 2 | Action | Move placeholder from method to first arg of text_input | `src/gui/add_game_dialog.rs:510,525,545,583,602,610` | `docs.rs/iced/0.13.1/iced/widget/fn.text_input.html` | N/A | cargo check | E0599 placeholder gone | Errors remain | L4 | DONE |
+| A7 | 2 | Action | Implement double-click via timestamp state tracking | `src/gui/main_window.rs:389,455,529`, `src/gui/main_window.rs` (add state field) | N/A | N/A | cargo check | E0599 on_double_press gone | Complex state logic fails | L5 | DONE |
+| A8 | 2 | Action | Wrap i18n.t String in text() widget for button | `src/gui/add_game_dialog.rs:627` | N/A | N/A | cargo check | E0277 button gone | Type mismatch | L6 | DONE |
+| A9 | 3 | Action | Add use iced::Length import | `src/main.rs:15` | N/A | N/A | cargo check | E0433 Length gone | Import wrong | L7 | DONE |
+| A10 | 3 | Action | Change lossless_flow from u32 to bool in AddGameDialog | `src/gui/add_game_dialog.rs:108` | N/A | N/A | cargo check | E0308 type mismatch gone | Logic errors | L7 | DONE |
+| A11 | 3 | Action | Change find_largest_png param from &PathBuf to &Path | `src/icons/icon_manager.rs:199` | N/A | N/A | cargo check | E0308 Path/PathBuf gone | Signature mismatch | L7 | DONE |
+| A12 | 3 | Action | Rename show_hidden_games to show_hidden | `src/gui/main_window.rs:659` | N/A | N/A | cargo check | E0609 field error gone | Wrong field name | L7 | DONE |
+| A13 | 4 | Action | Replace Task::chain with task.map | `src/gui/main_window.rs:169,178` | `docs.rs/iced_runtime/0.13/iced_runtime/task/struct.Task.html` | N/A | cargo check | E0308 Task args gone | API changed | L8 | DONE |
+| A14 | 4 | Action | Add #[derive(PartialEq)] to GameProcess | `src/launcher/game_launcher.rs:16` | N/A | N/A | cargo check | E0369 PartialEq gone | Derive fails | L8 | DONE |
+| A15 | 5 | Action | Verify Icon::from_rgba and TrayIcon::new in tray-icon | N/A | `docs.rs/tray-icon/latest/tray_icon/struct.Icon.html`, `docs.rs/tray-icon/latest/tray_icon/struct.TrayIcon.html` | tavily_extract | N/A | Docs confirm API | 404 or missing | X3 | DONE |
+| A16 | 5 | Action | Create Icon then TrayIcon::new with TrayIconAttributes | `src/tray/tray.rs:87-105` | N/A | N/A | cargo check | E0599 from_rgba gone | API mismatch | L9 | DONE |
+| A17 | 5 | Action | Wrap tooltip in Some() | `src/tray/tray.rs:102,129,147` | N/A | N/A | cargo check | E0308 Option gone | Type error | L9 | DONE |
+| A18 | 5 | Action | Add notify-rust to Cargo.toml | `Cargo.toml` | `crates.io/crates/notify-rust` | cargo add | cargo check | Dependency added | Version conflict | L9 | DONE |
+| A19 | 5 | Action | Replace show_notification with notify-rust Notification | `src/tray/tray.rs:154-161` | `docs.rs/notify-rust/latest` | N/A | cargo check | E0599 show_notification gone | API differs | L9 | DONE |
+| A20 | 5 | Action | Remove ? from update_tooltip or change return type | `src/tray/tray.rs:120` | N/A | N/A | cargo check | E0277 ? operator gone | Logic error | L9 | DONE |
+| A21 | 6 | Action | Replace key.as_str() with &key or key.as_ref() | `src/locale/i18n.rs:607` | N/A | N/A | cargo check | E0658 unstable gone | Syntax error | L10 | DONE |
+| A22 | 6 | Action | Borrow relative with & in join calls | `src/locale/i18n.rs:53,54` | N/A | N/A | cargo check | E0382 moved value gone | Ownership error | L10 | DONE |
+| A23 | 6 | Action | Add type annotation to obj.clone() | `src/steam/shortcuts.rs:89` | N/A | N/A | cargo check | E0282 type inference gone | Wrong type | L10 | DONE |
+| A24 | 6 | Action | Add lifetime 'a to view_release_row | `src/gui/proton_manager_dialog.rs:407-411` | N/A | N/A | cargo check | Lifetime error gone | Lifetime mismatch | L10 | DONE |
+| A25 | 7 | Action | Run clippy for additional checks | All files | N/A | cargo clippy | cargo clippy | No errors | Clippy errors | L11 | A26 |
+| A26 | 7 | Action | Build release binary | All files | N/A | cargo build | cargo build --release | Binary created | Build fails | L12 | T1 |
 | T1 | 7 | Terminator | MVP compilation achieved | N/A | N/A | N/A | N/A | Binary runs | N/A | N/A | DONE |
 
 ---

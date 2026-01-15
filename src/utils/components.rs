@@ -9,7 +9,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
-use tracing::{info, warn};
+use tracing::info;
 
 use crate::config::paths::Paths;
 

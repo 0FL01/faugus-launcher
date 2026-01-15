@@ -2,15 +2,14 @@
 // Dialog for managing Proton versions
 
 use iced::widget::{
-    button, column, container, horizontal_rule, row, scrollable, text, text_input, Space,
+    button, column, container, horizontal_rule, row, scrollable, text, Space,
 };
 use iced::{Alignment, Element, Length, Task};
-use std::collections::HashMap;
 use std::path::PathBuf;
 
 use crate::locale::I18n;
 use crate::proton::proton_manager::{
-    ProtonAsset, ProtonConfig, ProtonManager, ProtonRelease, PROTON_CONFIGS,
+    ProtonManager, ProtonRelease, PROTON_CONFIGS,
 };
 
 /// Messages for the Proton Manager
@@ -242,7 +241,7 @@ impl ProtonManagerDialog {
                 };
 
                 // Try to find and remove
-                if let Some(entry) = self.releases[tab_index]
+                if let Some(_entry) = self.releases[tab_index]
                     .iter()
                     .find(|e| e.tag_name == tag_name)
                 {
@@ -317,7 +316,7 @@ impl ProtonManagerDialog {
     }
 
     /// View the dialog
-    pub fn view(&self, i18n: &I18n) -> Element<ProtonManagerMessage> {
+    pub fn view(&self, i18n: &I18n) -> Element<'_, ProtonManagerMessage> {
         let tabs = self.view_tabs(i18n);
         let content = self.view_content(i18n);
         let progress_section = self.view_progress_section(i18n);
@@ -328,9 +327,10 @@ impl ProtonManagerDialog {
                 Space::with_height(Length::Fixed(10.0)),
                 text(error)
                     .size(12)
-                    .style(iced::theme::Text::Color(iced::Color::new(
-                        1.0, 0.0, 0.0, 1.0
-                    ))),
+                    .style(|_theme: &iced::Theme| iced::widget::text::Style {
+                        color: Some(iced::Color::new(1.0, 0.0, 0.0, 1.0)),
+                        ..Default::default()
+                    }),
             ]
         } else {
             column![]
@@ -353,11 +353,11 @@ impl ProtonManagerDialog {
     }
 
     /// View tab buttons
-    fn view_tabs(&self, i18n: &I18n) -> Element<ProtonManagerMessage> {
+    fn view_tabs(&self, _i18n: &I18n) -> Element<'_, ProtonManagerMessage> {
         let mut tabs = row![];
 
         for (index, config) in PROTON_CONFIGS.iter().enumerate() {
-            let is_selected = self.selected_tab == index;
+            let _is_selected = self.selected_tab == index;
             let tab_button = button(text(config.label).size(14))
                 .on_press(ProtonManagerMessage::TabSelected(index));
 
@@ -368,7 +368,7 @@ impl ProtonManagerDialog {
     }
 
     /// View content area
-    fn view_content(&self, i18n: &I18n) -> Element<ProtonManagerMessage> {
+    fn view_content(&self, i18n: &I18n) -> Element<'_, ProtonManagerMessage> {
         if self.loading {
             return text("Loading...").into();
         }
@@ -404,11 +404,11 @@ impl ProtonManagerDialog {
     }
 
     /// View a single release row
-    fn view_release_row(
+    fn view_release_row<'a>(
         &self,
-        release: &ProtonVersionEntry,
-        i18n: &I18n,
-    ) -> Element<ProtonManagerMessage> {
+        release: &'a ProtonVersionEntry,
+        _i18n: &I18n,
+    ) -> Element<'a, ProtonManagerMessage> {
         let version_text = text(&release.display_name).size(14);
         let size_text = text(format_size(release.size)).size(12);
 
@@ -450,7 +450,7 @@ impl ProtonManagerDialog {
     }
 
     /// View progress section
-    fn view_progress_section(&self, i18n: &I18n) -> Element<ProtonManagerMessage> {
+    fn view_progress_section(&self, _i18n: &I18n) -> Element<'_, ProtonManagerMessage> {
         if !self.show_progress {
             return column![].into();
         }
@@ -467,7 +467,7 @@ impl ProtonManagerDialog {
     }
 
     /// View buttons
-    fn view_buttons(&self, i18n: &I18n) -> Element<ProtonManagerMessage> {
+    fn view_buttons(&self, i18n: &I18n) -> Element<'_, ProtonManagerMessage> {
         row![
             button(text("Refresh").size(14)).on_press(ProtonManagerMessage::RefreshClicked),
             Space::with_width(Length::Fill),

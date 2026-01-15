@@ -15,9 +15,9 @@ pub struct ConfirmationDialog {
     /// Dialog message
     message: String,
     /// Callback when confirmed
-    on_confirm: Message,
+    on_confirm: Box<Message>,
     /// Callback when cancelled
-    on_cancel: Message,
+    on_cancel: Box<Message>,
 }
 
 impl ConfirmationDialog {
@@ -26,8 +26,8 @@ impl ConfirmationDialog {
         Self {
             title,
             message,
-            on_confirm,
-            on_cancel,
+            on_confirm: Box::new(on_confirm),
+            on_cancel: Box::new(on_cancel),
         }
     }
 
@@ -63,12 +63,12 @@ impl ConfirmationDialog {
     }
 
     /// View the confirmation dialog
-    pub fn view(&self, i18n: &I18n) -> Element<Message> {
+    pub fn view(&self, i18n: &I18n) -> Element<'_, Message> {
         // Background overlay
         let background = container(Space::new(Length::Fill, Length::Fill))
             .width(Length::Fill)
             .height(Length::Fill)
-            .style(iced::theme::Container::Transparent);
+            .style(container::transparent);
 
         // Dialog container
         let dialog = container(
@@ -86,11 +86,11 @@ impl ConfirmationDialog {
                 row![
                     Space::new(Length::Fill, Length::Shrink),
                     button(text(i18n.t("No")).size(14))
-                        .on_press(self.on_cancel.clone())
+                        .on_press((*self.on_cancel).clone())
                         .padding(10)
                         .width(100),
                     button(text(i18n.t("Yes")).size(14))
-                        .on_press(self.on_confirm.clone())
+                        .on_press((*self.on_confirm).clone())
                         .padding(10)
                         .width(100),
                 ]
@@ -103,7 +103,7 @@ impl ConfirmationDialog {
             .max_width(400),
         )
         .padding(20)
-        .style(iced::theme::Container::Box);
+        .style(container::bordered_box);
 
         // Stack background and dialog
         container(row![background, dialog])

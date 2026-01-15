@@ -1,11 +1,11 @@
 // Settings Dialog
 // Configuration dialog for Faugus Launcher
 
-use iced::widget::{button, checkbox, column, container, row, scrollable, text, text_input, Space};
-use iced::{Alignment, Element, Length, Task};
+use iced::widget::{button, checkbox, column, row, scrollable, text, text_input, Space};
+use iced::{Element, Length};
 use std::path::PathBuf;
 
-use crate::config::{AppConfig, ConfigUpdates, InterfaceMode};
+use crate::config::{AppConfig, InterfaceMode};
 use crate::locale::I18n;
 
 /// Messages for the Settings dialog
@@ -162,7 +162,7 @@ impl SettingsDialog {
     pub fn update(&mut self, message: SettingsMessage) {
         match message {
             SettingsMessage::LanguageChanged(code) => {
-                if let Some((_, name)) = self.languages.iter().find(|(c, _)| c == &code) {
+                if let Some((_, _name)) = self.languages.iter().find(|(c, _)| c == &code) {
                     if let Some(idx) = self.languages.iter().position(|(c, _)| c == &code) {
                         self.language_index = idx;
                     }
@@ -327,7 +327,7 @@ impl SettingsDialog {
     }
 
     /// View the dialog
-    pub fn view(&self, i18n: &I18n) -> Element<SettingsMessage> {
+    pub fn view(&self, i18n: &I18n) -> Element<'_, SettingsMessage> {
         let general_section = self.view_general_section(i18n);
         let paths_section = self.view_paths_section(i18n);
         let performance_section = self.view_performance_section(i18n);
@@ -342,9 +342,10 @@ impl SettingsDialog {
                 Space::with_height(Length::Fixed(10.0)),
                 text(i18n.t("Some changes require a restart to take effect."))
                     .size(12)
-                    .style(iced::theme::Text::Color(iced::Color::new(
-                        1.0, 0.6, 0.0, 1.0
-                    ))),
+                    .style(|_theme: &iced::Theme| iced::widget::text::Style {
+                        color: Some(iced::Color::new(1.0, 0.6, 0.0, 1.0)),
+                        ..Default::default()
+                    }),
             ]
         } else {
             column![]
@@ -378,7 +379,7 @@ impl SettingsDialog {
     }
 
     /// View general settings section
-    fn view_general_section(&self, i18n: &I18n) -> Element<SettingsMessage> {
+    fn view_general_section(&self, i18n: &I18n) -> Element<'_, SettingsMessage> {
         let language_display = self
             .languages
             .get(self.language_index)
@@ -427,7 +428,7 @@ impl SettingsDialog {
     }
 
     /// View paths settings section
-    fn view_paths_section(&self, i18n: &I18n) -> Element<SettingsMessage> {
+    fn view_paths_section(&self, i18n: &I18n) -> Element<'_, SettingsMessage> {
         let prefix_display = self.config.default_prefix.display().to_string();
         let lossless_display = self.config.lossless_location.display().to_string();
         let runner_display = self
@@ -445,7 +446,7 @@ impl SettingsDialog {
                 Space::with_height(Length::Fixed(5.0)),
                 row![
                     text_input("", &prefix_display).on_input(SettingsMessage::DefaultPrefixChanged),
-                    button("...")
+                    button(text("..."))
                         .on_press(SettingsMessage::BrowseDefaultPrefix)
                         .width(Length::Fixed(50.0)),
                 ]
@@ -460,7 +461,7 @@ impl SettingsDialog {
                 row![
                     text_input("", &lossless_display)
                         .on_input(SettingsMessage::LosslessLocationChanged),
-                    button("...")
+                    button(text("..."))
                         .on_press(SettingsMessage::BrowseLosslessLocation)
                         .width(Length::Fixed(50.0)),
                 ]
@@ -485,7 +486,7 @@ impl SettingsDialog {
     }
 
     /// View performance settings section
-    fn view_performance_section(&self, i18n: &I18n) -> Element<SettingsMessage> {
+    fn view_performance_section(&self, i18n: &I18n) -> Element<'_, SettingsMessage> {
         column![
             text(i18n.t("Performance")).size(18),
             Space::with_height(Length::Fixed(10.0)),
@@ -501,7 +502,7 @@ impl SettingsDialog {
     }
 
     /// View system settings section
-    fn view_system_section(&self, i18n: &I18n) -> Element<SettingsMessage> {
+    fn view_system_section(&self, i18n: &I18n) -> Element<'_, SettingsMessage> {
         column![
             text(i18n.t("System")).size(18),
             Space::with_height(Length::Fixed(10.0)),
@@ -524,7 +525,7 @@ impl SettingsDialog {
     }
 
     /// View experimental settings section
-    fn view_experimental_section(&self, i18n: &I18n) -> Element<SettingsMessage> {
+    fn view_experimental_section(&self, i18n: &I18n) -> Element<'_, SettingsMessage> {
         column![
             text(i18n.t("Experimental")).size(18),
             Space::with_height(Length::Fixed(10.0)),
@@ -540,7 +541,7 @@ impl SettingsDialog {
     }
 
     /// View tools section
-    fn view_tools_section(&self, i18n: &I18n) -> Element<SettingsMessage> {
+    fn view_tools_section(&self, i18n: &I18n) -> Element<'_, SettingsMessage> {
         column![
             text(i18n.t("Tools")).size(18),
             Space::with_height(Length::Fixed(10.0)),
@@ -561,7 +562,7 @@ impl SettingsDialog {
     }
 
     /// View actions section
-    fn view_actions_section(&self, i18n: &I18n) -> Element<SettingsMessage> {
+    fn view_actions_section(&self, i18n: &I18n) -> Element<'_, SettingsMessage> {
         column![
             text(i18n.t("Actions")).size(18),
             Space::with_height(Length::Fixed(10.0)),
@@ -589,7 +590,7 @@ impl SettingsDialog {
     }
 
     /// View buttons section
-    fn view_buttons(&self, i18n: &I18n) -> Element<SettingsMessage> {
+    fn view_buttons(&self, i18n: &I18n) -> Element<'_, SettingsMessage> {
         row![
             Space::with_width(Length::Fill),
             button(text(i18n.t("Cancel")).size(14))

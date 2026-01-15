@@ -4,8 +4,7 @@
 use iced::Task;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use tokio::sync::mpsc;
-use tracing::{error, info, warn};
+use tracing::{error, info};
 
 use crate::config::Game;
 use crate::launcher::game_launcher::{GameLauncher, GameProcess};

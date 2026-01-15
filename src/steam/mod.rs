@@ -3,4 +3,4 @@
 
 mod shortcuts;
 
-pub use shortcuts::{SteamShortcut, SteamShortcuts};
+pub use shortcuts::SteamShortcuts;

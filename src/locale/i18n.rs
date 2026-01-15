@@ -2,7 +2,6 @@
 // Handles translations and localization
 
 use std::collections::HashMap;
-use std::fs;
 use std::path::PathBuf;
 
 use crate::config::paths::Paths;
@@ -29,14 +28,12 @@ impl I18n {
         let mut translations = HashMap::new();
 
         // Try to load from system locale directory
-        let locale_paths = vec![
-            Self::get_locale_dir(format!("faugus-launcher-{}", language)),
+        let _locale_paths = [Self::get_locale_dir(format!("faugus-launcher-{}", language)),
             Self::get_locale_dir(format!("faugus-launcher_{}", language)),
             Self::get_locale_dir(format!(
                 "locales/{}/LC_MESSAGES/faugus-launcher.mo",
                 language
-            )),
-        ];
+            ))];
 
         // For now, use built-in translations
         // In production, you would load .mo files or use gettext
@@ -49,21 +46,19 @@ impl I18n {
     fn get_locale_dir(relative: String) -> PathBuf {
         // Check multiple possible locations
         let possible_paths = vec![
-            Paths::system_data(&format!("locale/{}", relative)),
-            Some(PathBuf::from("/usr/share/locale").join(relative)),
-            Some(PathBuf::from("/usr/local/share/locale").join(relative)),
+            Paths::system_data(&format!("locale/{}", &relative)),
+            Some(PathBuf::from("/usr/share/locale").join(&relative)),
+            Some(PathBuf::from("/usr/local/share/locale").join(&relative)),
         ];
 
-        for path in possible_paths {
-            if let Some(p) = path {
-                if p.exists() {
-                    return p;
-                }
+        for p in possible_paths.into_iter().flatten() {
+            if p.exists() {
+                return p;
             }
         }
 
         // Fallback
-        Paths::user_data(&format!("locale/{}", relative))
+        Paths::user_data(&format!("locale/{}", &relative))
     }
 
     /// Get built-in translations (fallback)
@@ -604,7 +599,7 @@ impl I18n {
         // If not English, fill in missing translations with English
         if language != "en" && language != "en_US" {
             for (key, value) in &en_translations {
-                if !translations.contains_key(key.as_str()) {
+                if !translations.contains_key(*key) {
                     translations.insert(key.to_string(), value.to_string());
                 }
             }

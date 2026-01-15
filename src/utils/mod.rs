@@ -3,4 +3,3 @@
 
 mod components;
 
-pub use components::ComponentManager;

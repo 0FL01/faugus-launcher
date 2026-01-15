@@ -42,7 +42,7 @@ impl Paths {
 
     /// Get system data directory
     pub fn system_data(relative_path: &str) -> Option<PathBuf> {
-        let parts: Vec<&str> = relative_path.split('/').collect();
+        let _parts: Vec<&str> = relative_path.split('/').collect();
 
         for data_dir in Self::xdg_data_dirs() {
             let path = data_dir.join(relative_path);

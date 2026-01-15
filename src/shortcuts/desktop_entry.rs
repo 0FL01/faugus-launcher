@@ -96,7 +96,7 @@ impl DesktopEntry {
             if game.lossless_multiplier > 0 {
                 parts.push(format!("LSFG_MULTIPLIER={}", game.lossless_multiplier));
             }
-            if game.lossless_flow > 0 {
+            if game.lossless_flow {
                 parts.push(format!("LSFG_FLOW_SCALE={}", game.lossless_flow));
             }
             if game.lossless_performance {

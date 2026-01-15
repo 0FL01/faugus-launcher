@@ -46,7 +46,7 @@ impl GameLauncher {
             .spawn()
             .with_context(|| format!("Failed to launch game: {}", game.title))?;
 
-        let pid = child.id().unwrap_or(0) as u32;
+        let pid = child.id().unwrap_or(0);
         info!("Game {} launched with PID: {}", game.title, pid);
 
         Ok(GameProcess {
@@ -109,11 +109,11 @@ impl GameLauncher {
         }
 
         // Game ID for UMU
-        cmd.env("GAMEID", format!("{}", game.gameid));
+        cmd.env("GAMEID", &game.gameid);
 
         // MangoHud
         if game.mangohud {
-            if let Some(mangohud) = Paths::mangohud() {
+            if let Some(_mangohud) = Paths::mangohud() {
                 info!("Enabling MangoHud");
                 cmd.env("MANGOHUD", "1");
                 cmd.env(
@@ -182,7 +182,7 @@ impl GameLauncher {
         // Logging
         if let Ok(config) = std::fs::read_to_string(Paths::config_file()) {
             if config.contains("enable-logging=true") {
-                let log_file = Paths::logs_dir().join(format!("{}.log", game.gameid));
+                let _log_file = Paths::logs_dir().join(format!("{}.log", game.gameid));
                 cmd.env("WINEDEBUG", "+all");
                 cmd.env("WINE_MONO_TRACE", "E:System.Windows.Forms");
             }

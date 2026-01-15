@@ -63,12 +63,12 @@ impl LogViewerDialog {
                 let path = entry.path();
                 if path
                     .extension()
-                    .map_or(false, |ext| ext == "log" || ext == "txt")
+                    .is_some_and(|ext| ext == "log" || ext == "txt")
                 {
                     if let Ok(metadata) = fs::metadata(&path) {
                         if let Ok(modified) = metadata.modified() {
                             let is_more_recent =
-                                most_recent.as_ref().map_or(true, |(_, m)| modified > *m);
+                                most_recent.as_ref().is_none_or(|(_, m)| modified > *m);
                             if is_more_recent {
                                 most_recent = Some((path, modified));
                             }
@@ -137,7 +137,7 @@ impl LogViewerDialog {
     }
 
     /// View the dialog
-    pub fn view(&self, i18n: &I18n) -> Element<LogViewerMessage> {
+    pub fn view(&self, i18n: &I18n) -> Element<'_, LogViewerMessage> {
         // Header with title
         let header = container(text(i18n.t("Application Logs")).size(20))
             .padding(10)
@@ -175,7 +175,7 @@ impl LogViewerDialog {
     }
 
     /// View log display section
-    fn view_log_display(&self) -> Element<LogViewerMessage> {
+    fn view_log_display(&self) -> Element<'_, LogViewerMessage> {
         let log_text = text(&self.log_content).size(11).width(Length::Fill);
 
         let scrollable_content = scrollable(log_text)
@@ -190,7 +190,7 @@ impl LogViewerDialog {
     }
 
     /// View buttons section
-    fn view_buttons(&self, i18n: &I18n) -> Element<LogViewerMessage> {
+    fn view_buttons(&self, i18n: &I18n) -> Element<'_, LogViewerMessage> {
         row![
             button(text(i18n.t("Refresh")).size(14)).on_press(LogViewerMessage::Refresh),
             Space::with_width(Length::Fixed(10.0)),

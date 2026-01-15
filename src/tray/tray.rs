@@ -2,10 +2,8 @@
 // Main system tray functionality using tray-icon crate
 
 use anyhow::{Context, Result};
-use muda::Menu;
-use std::path::PathBuf;
 use std::sync::mpsc;
-use tracing::{error, info, warn};
+use tracing::info;
 
 use super::icon::TrayIcon;
 use super::menu::TrayMenu;
@@ -88,18 +86,16 @@ impl SystemTray {
         let icon = self.icon.as_ref().context("Tray icon not loaded")?;
         let menu = self.menu.as_ref().context("Tray menu not created")?;
 
-        // Load icon bytes
-        let icon_bytes = icon.load_icon_bytes()?;
+        // Load tray_icon::Icon
+        let tray_icon_data = icon.load_icon()?;
 
-        // Create tray icon from bytes
-        let tray_icon = tray_icon::TrayIcon::from_rgba(icon_bytes, None, None)
-            .context("Failed to create tray icon from bytes")?;
-
-        // Set menu
-        tray_icon.set_menu(menu.menu());
-
-        // Set tooltip
-        tray_icon.set_tooltip("Faugus Launcher");
+        // Create tray icon using builder
+        let tray_icon = tray_icon::TrayIconBuilder::new()
+            .with_menu(Box::new(menu.menu().clone()))
+            .with_tooltip("Faugus Launcher")
+            .with_icon(tray_icon_data)
+            .build()
+            .context("Failed to create tray icon")?;
 
         Ok(tray_icon)
     }
@@ -117,16 +113,16 @@ impl SystemTray {
                 if let Some(menu) = &self.menu {
                     menu.set_window_visible(visible);
                 }
-                self.update_tooltip()?;
+                let _ = self.update_tooltip();
             }
             TrayMessage::ShowNotification { title, body } => {
                 if self.config.show_notifications {
-                    self.show_notification(&title, &body)?;
+                    let _ = self.show_notification(&title, &body);
                 }
             }
             TrayMessage::SetTooltip(tooltip) => {
                 if let Some(tray_icon) = &self.tray_icon {
-                    tray_icon.set_tooltip(&tooltip);
+                    let _ = tray_icon.set_tooltip(Some(tooltip));
                 }
             }
             TrayMessage::Quit => {
@@ -144,7 +140,7 @@ impl SystemTray {
             } else {
                 "Faugus Launcher - Hidden".to_string()
             };
-            tray_icon.set_tooltip(&tooltip);
+            let _ = tray_icon.set_tooltip(Some(&tooltip));
             Some(tooltip)
         } else {
             None
@@ -153,10 +149,10 @@ impl SystemTray {
 
     /// Show a system notification
     fn show_notification(&self, title: &str, body: &str) -> Result<()> {
-        // Use notify-rust if available, otherwise tray-icon's notification
-        if let Some(tray_icon) = &self.tray_icon {
-            tray_icon.show_notification(title, body);
-        }
+        notify_rust::Notification::new()
+            .summary(title)
+            .body(body)
+            .show()?;
         Ok(())
     }
 

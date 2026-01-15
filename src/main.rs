@@ -15,7 +15,6 @@ mod utils;
 use iced::widget::{column, container, text};
 use iced::{window, Element, Size, Task};
 use tracing::{error, info, warn};
-use tracing_subscriber;
 
 use config::app_config::AppConfig;
 use config::game_config::Game;
@@ -25,12 +24,12 @@ use gui::log_viewer_dialog::{LogViewerDialog, LogViewerMessage};
 use gui::main_window::MainWindow;
 use gui::settings_dialog::{SettingsDialog, SettingsMessage};
 use icons::IconManager;
-use launcher::{LaunchMessage, LaunchStatus};
+use launcher::LaunchMessage;
 use locale::i18n::I18n;
 use shortcuts::DesktopShortcutManager;
 use shortcuts::ShortcutLocation;
 use steam::SteamShortcuts;
-use tray::{SystemTray, TrayConfig, TrayEvent, TrayMessage};
+use tray::{SystemTray, TrayConfig, TrayEvent};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -84,7 +83,7 @@ enum DialogState {
     None,
     AddGame(AddGameDialog),
     Settings(SettingsDialog),
-    Confirmation(ConfirmationDialog),
+    Confirmation(Box<ConfirmationDialog>),
     LogViewer(LogViewerDialog),
 }
 
@@ -132,7 +131,7 @@ impl FaugusLauncher {
             });
 
             // Initialize the tray
-            if let Err(e) = tray.init(&main_window.i18n()) {
+            if let Err(e) = tray.init(main_window.i18n()) {
                 error!("Failed to initialize system tray: {}", e);
                 None
             } else {
@@ -276,18 +275,16 @@ impl FaugusLauncher {
                                             if let Ok(mut shortcuts) = SteamShortcuts::load() {
                                                 if let Err(e) = shortcuts.add_or_update(&game) {
                                                     error!("Failed to add Steam shortcut: {}", e);
+                                                } else if let Err(e) = shortcuts.save() {
+                                                    error!(
+                                                        "Failed to save Steam shortcuts: {}",
+                                                        e
+                                                    );
                                                 } else {
-                                                    if let Err(e) = shortcuts.save() {
-                                                        error!(
-                                                            "Failed to save Steam shortcuts: {}",
-                                                            e
-                                                        );
-                                                    } else {
-                                                        info!(
-                                                            "Steam shortcut added for: {}",
-                                                            game.title
-                                                        );
-                                                    }
+                                                    info!(
+                                                        "Steam shortcut added for: {}",
+                                                        game.title
+                                                    );
                                                 }
                                             }
                                         }
@@ -344,6 +341,8 @@ impl FaugusLauncher {
                     }
                     DialogState::None => false,
                     DialogState::Settings(_) => false,
+                    DialogState::Confirmation(_) => false,
+                    DialogState::LogViewer(_) => false,
                 };
 
                 if should_close {
@@ -382,6 +381,7 @@ impl FaugusLauncher {
                     }
                     DialogState::None => false,
                     DialogState::AddGame(_) => false,
+                    DialogState::Confirmation(_) => false,
                     DialogState::LogViewer(_) => false,
                 };
 
@@ -404,6 +404,7 @@ impl FaugusLauncher {
                     DialogState::None => false,
                     DialogState::AddGame(_) => false,
                     DialogState::Settings(_) => false,
+                    DialogState::Confirmation(_) => false,
                 };
 
                 if should_close {
@@ -519,12 +520,12 @@ impl FaugusLauncher {
         }
     }
 
-    fn view(&self) -> Element<Message> {
+    fn view(&self) -> Element<'_, Message> {
         match &self.dialog {
             DialogState::None => self.main_window.view(),
             DialogState::AddGame(dialog) => {
                 // Show dialog overlay
-                let main_content = self.main_window.view();
+                let _main_content = self.main_window.view();
 
                 // Create an overlay with the dialog
                 let dialog_view = dialog
@@ -533,25 +534,25 @@ impl FaugusLauncher {
 
                 // Create a semi-transparent backdrop
                 let backdrop = container(text(""))
-                    .width(Length::Fill)
-                    .height(Length::Fill)
-                    .style(iced::theme::Container::Transparent);
+                    .width(iced::Length::Fill)
+                    .height(iced::Length::Fill)
+                    .style(iced::widget::container::transparent);
 
                 // Stack the dialog on top
                 container(column![
                     backdrop,
                     container(dialog_view)
-                        .width(Length::Fixed(600.0))
-                        .height(Length::Fill)
+                        .width(iced::Length::Fixed(600.0))
+                        .height(iced::Length::Fill)
                         .padding(20)
                 ])
-                .width(Length::Fill)
-                .height(Length::Fill)
+                .width(iced::Length::Fill)
+                .height(iced::Length::Fill)
                 .into()
             }
             DialogState::Settings(dialog) => {
                 // Show dialog overlay
-                let main_content = self.main_window.view();
+                let _main_content = self.main_window.view();
 
                 // Create an overlay with the dialog
                 let dialog_view = dialog
@@ -560,25 +561,25 @@ impl FaugusLauncher {
 
                 // Create a semi-transparent backdrop
                 let backdrop = container(text(""))
-                    .width(Length::Fill)
-                    .height(Length::Fill)
-                    .style(iced::theme::Container::Transparent);
+                    .width(iced::Length::Fill)
+                    .height(iced::Length::Fill)
+                    .style(iced::widget::container::transparent);
 
                 // Stack the dialog on top
                 container(column![
                     backdrop,
                     container(dialog_view)
-                        .width(Length::Fixed(700.0))
-                        .height(Length::Fill)
+                        .width(iced::Length::Fixed(700.0))
+                        .height(iced::Length::Fill)
                         .padding(20)
                 ])
-                .width(Length::Fill)
-                .height(Length::Fill)
+                .width(iced::Length::Fill)
+                .height(iced::Length::Fill)
                 .into()
             }
             DialogState::LogViewer(dialog) => {
                 // Show log viewer overlay
-                let main_content = self.main_window.view();
+                let _main_content = self.main_window.view();
 
                 // Create an overlay with the dialog
                 let dialog_view = dialog
@@ -587,25 +588,25 @@ impl FaugusLauncher {
 
                 // Create a semi-transparent backdrop
                 let backdrop = container(text(""))
-                    .width(Length::Fill)
-                    .height(Length::Fill)
-                    .style(iced::theme::Container::Transparent);
+                    .width(iced::Length::Fill)
+                    .height(iced::Length::Fill)
+                    .style(iced::widget::container::transparent);
 
                 // Stack the dialog on top
                 container(column![
                     backdrop,
                     container(dialog_view)
-                        .width(Length::Fixed(900.0))
-                        .height(Length::Fill)
+                        .width(iced::Length::Fixed(900.0))
+                        .height(iced::Length::Fill)
                         .padding(20)
                 ])
-                .width(Length::Fill)
-                .height(Length::Fill)
+                .width(iced::Length::Fill)
+                .height(iced::Length::Fill)
                 .into()
             }
             DialogState::Confirmation(dialog) => {
                 // Show confirmation dialog overlay
-                let main_content = self.main_window.view();
+                let _main_content = self.main_window.view();
 
                 // The dialog already includes the overlay in its view method
                 dialog.view(self.main_window.i18n())
@@ -624,5 +625,5 @@ fn main() -> iced::Result {
         size: Size::new(1200.0, 800.0),
         ..Default::default()
     })
-    .run_with(|| FaugusLauncher::new())
+    .run_with(FaugusLauncher::new)
 }

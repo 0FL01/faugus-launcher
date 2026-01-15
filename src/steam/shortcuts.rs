@@ -82,10 +82,9 @@ impl SteamShortcuts {
         }
 
         // Use new-vdf-parser to read binary VDF
-        let shortcuts_value = new_vdf_parser::open_shortcuts_vdf(&vdf_path)
-            .context("Failed to parse shortcuts.vdf")?;
+        let shortcuts_value = new_vdf_parser::open_shortcuts_vdf(&vdf_path);
 
-        let shortcuts = if let Some(obj) = shortcuts_value.as_object() {
+        let shortcuts: Map<String, Value> = if let Some(obj) = shortcuts_value.as_object() {
             obj.clone()
         } else {
             Map::new()
@@ -186,7 +185,7 @@ impl SteamShortcuts {
         };
 
         // Check if shortcut already exists
-        if let Some((existing_key, mut existing_obj)) = self.find_shortcut(&game.title) {
+        if let Some((existing_key, _existing_obj)) = self.find_shortcut(&game.title) {
             info!("Updating existing shortcut: {}", game.title);
 
             // Update existing shortcut
@@ -283,7 +282,7 @@ impl SteamShortcuts {
     pub fn get_all(&self) -> Vec<SteamShortcut> {
         let mut shortcuts = Vec::new();
 
-        for (key, value) in &self.shortcuts {
+        for (_key, value) in &self.shortcuts {
             if let Some(obj) = value.as_object() {
                 if let Ok(shortcut) = self.value_to_shortcut(obj) {
                     shortcuts.push(shortcut);

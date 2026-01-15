@@ -2,7 +2,7 @@
 // Dialog for adding or editing games in Faugus Launcher
 
 use iced::widget::{button, checkbox, column, container, row, scrollable, text, text_input, Space};
-use iced::{Alignment, Element, Length, Task};
+use iced::{Element, Length, Task};
 use std::path::PathBuf;
 
 use crate::config::{AppConfig, Game};
@@ -104,8 +104,8 @@ pub struct AddGameDialog {
     lossless_enabled: bool,
     /// Lossless Scaling frame multiplier
     lossless_multiplier: u32,
-    /// Lossless Scaling flow scale (25-100)
-    lossless_flow: u32,
+    /// Lossless Scaling flow scale
+    lossless_flow: bool,
     /// Lossless Scaling performance mode
     lossless_performance: bool,
     /// Lossless Scaling HDR mode
@@ -150,7 +150,7 @@ impl AddGameDialog {
 
             lossless_enabled: false,
             lossless_multiplier: 2,
-            lossless_flow: 100,
+            lossless_flow: false,
             lossless_performance: false,
             lossless_hdr: false,
 
@@ -446,7 +446,7 @@ impl AddGameDialog {
     }
 
     /// View the dialog
-    pub fn view(&self, i18n: &I18n) -> Element<AddGameMessage> {
+    pub fn view(&self, i18n: &I18n) -> Element<'_, AddGameMessage> {
         let content = if self.showing_lossless {
             self.view_lossless_dialog(i18n)
         } else {
@@ -461,7 +461,7 @@ impl AddGameDialog {
     }
 
     /// View the main dialog
-    fn view_main_dialog(&self, i18n: &I18n) -> Element<AddGameMessage> {
+    fn view_main_dialog(&self, i18n: &I18n) -> Element<'_, AddGameMessage> {
         let title_section = self.view_title_section(i18n);
         let path_section = self.view_path_section(i18n);
         let prefix_section = self.view_prefix_section(i18n);
@@ -501,29 +501,26 @@ impl AddGameDialog {
     }
 
     /// View the title section
-    fn view_title_section(&self, i18n: &I18n) -> Element<AddGameMessage> {
+    fn view_title_section(&self, i18n: &I18n) -> Element<'_, AddGameMessage> {
         column![
             text(i18n.t("Title")).size(14),
             Space::with_height(Length::Fixed(5.0)),
-            text_input("", &self.game_title)
-                .on_input(AddGameMessage::TitleChanged)
-                .placeholder("Game Title"),
+            text_input(&i18n.t("Game Title"), &self.game_title)
+                .on_input(AddGameMessage::TitleChanged),
         ]
         .spacing(5)
         .into()
     }
 
     /// View the path section
-    fn view_path_section(&self, i18n: &I18n) -> Element<AddGameMessage> {
+    fn view_path_section(&self, i18n: &I18n) -> Element<'_, AddGameMessage> {
         let path_display = self.game_path.display().to_string();
         column![
             text(i18n.t("Path")).size(14),
             Space::with_height(Length::Fixed(5.0)),
             row![
-                text_input("", &path_display)
-                    .on_input(AddGameMessage::PathChanged)
-                    .placeholder("/path/to/the/exe"),
-                button("...")
+                text_input("/path/to/the/exe", &path_display).on_input(AddGameMessage::PathChanged),
+                button(text("..."))
                     .on_press(AddGameMessage::BrowsePath)
                     .width(Length::Fixed(50.0)),
             ]
@@ -534,16 +531,15 @@ impl AddGameDialog {
     }
 
     /// View the prefix section
-    fn view_prefix_section(&self, i18n: &I18n) -> Element<AddGameMessage> {
+    fn view_prefix_section(&self, i18n: &I18n) -> Element<'_, AddGameMessage> {
         let prefix_display = self.prefix.display().to_string();
         column![
             text(i18n.t("Prefix")).size(14),
             Space::with_height(Length::Fixed(5.0)),
             row![
-                text_input("", &prefix_display)
-                    .on_input(AddGameMessage::PrefixChanged)
-                    .placeholder("/path/to/the/prefix"),
-                button("...")
+                text_input("/path/to/the/prefix", &prefix_display)
+                    .on_input(AddGameMessage::PrefixChanged),
+                button(text("..."))
                     .on_press(AddGameMessage::BrowsePrefix)
                     .width(Length::Fixed(50.0)),
             ]
@@ -554,7 +550,7 @@ impl AddGameDialog {
     }
 
     /// View the runner section
-    fn view_runner_section(&self, i18n: &I18n) -> Element<AddGameMessage> {
+    fn view_runner_section(&self, i18n: &I18n) -> Element<'_, AddGameMessage> {
         // For now, just show a simple dropdown (we'll use a picker later)
         column![
             text(i18n.t("Proton")).size(14),
@@ -573,15 +569,13 @@ impl AddGameDialog {
     }
 
     /// View the protonfix section
-    fn view_protonfix_section(&self, i18n: &I18n) -> Element<AddGameMessage> {
+    fn view_protonfix_section(&self, _i18n: &I18n) -> Element<'_, AddGameMessage> {
         column![
             text("Protonfix (UMU ID)").size(14),
             Space::with_height(Length::Fixed(5.0)),
             row![
-                text_input("", &self.protonfix)
-                    .on_input(AddGameMessage::ProtonfixChanged)
-                    .placeholder("UMU ID"),
-                button("...")
+                text_input("UMU ID", &self.protonfix).on_input(AddGameMessage::ProtonfixChanged),
+                button(text("..."))
                     .on_press(AddGameMessage::OpenProtonfixUrl)
                     .width(Length::Fixed(50.0)),
             ]
@@ -592,22 +586,23 @@ impl AddGameDialog {
     }
 
     /// View the arguments section
-    fn view_arguments_section(&self, i18n: &I18n) -> Element<AddGameMessage> {
+    fn view_arguments_section(&self, i18n: &I18n) -> Element<'_, AddGameMessage> {
         column![
             column![
                 text(i18n.t("Launch Arguments")).size(14),
                 Space::with_height(Length::Fixed(5.0)),
-                text_input("", &self.launch_arguments)
-                    .on_input(AddGameMessage::LaunchArgumentsChanged)
-                    .placeholder("e.g.: PROTON_USE_WINED3D=1 gamescope -W 2560 -H 1440"),
+                text_input(
+                    "e.g.: PROTON_USE_WINED3D=1 gamescope -W 2560 -H 1440",
+                    &self.launch_arguments
+                )
+                .on_input(AddGameMessage::LaunchArgumentsChanged),
             ]
             .spacing(5),
             column![
                 text(i18n.t("Game Arguments")).size(14),
                 Space::with_height(Length::Fixed(5.0)),
-                text_input("", &self.game_arguments)
-                    .on_input(AddGameMessage::GameArgumentsChanged)
-                    .placeholder("e.g.: -d3d11 -fullscreen"),
+                text_input("e.g.: -d3d11 -fullscreen", &self.game_arguments)
+                    .on_input(AddGameMessage::GameArgumentsChanged),
             ]
             .spacing(5),
         ]
@@ -616,7 +611,7 @@ impl AddGameDialog {
     }
 
     /// View the options section
-    fn view_options_section(&self, i18n: &I18n) -> Element<AddGameMessage> {
+    fn view_options_section(&self, i18n: &I18n) -> Element<'_, AddGameMessage> {
         column![
             text(i18n.t("Options")).size(14),
             Space::with_height(Length::Fixed(5.0)),
@@ -624,7 +619,7 @@ impl AddGameDialog {
             checkbox("GameMode", self.gamemode).on_toggle(AddGameMessage::GameModeToggled),
             checkbox(i18n.t("Disable Hidraw"), self.disable_hidraw)
                 .on_toggle(AddGameMessage::DisableHidrawToggled),
-            row![button(i18n.t("Lossless Scaling Frame Generation"))
+            row![button(text(i18n.t("Lossless Scaling Frame Generation")))
                 .on_press(AddGameMessage::LosslessClicked),]
             .padding(5),
         ]
@@ -633,7 +628,7 @@ impl AddGameDialog {
     }
 
     /// View the shortcuts section
-    fn view_shortcuts_section(&self, i18n: &I18n) -> Element<AddGameMessage> {
+    fn view_shortcuts_section(&self, i18n: &I18n) -> Element<'_, AddGameMessage> {
         column![
             text(i18n.t("Shortcut")).size(14),
             Space::with_height(Length::Fixed(5.0)),
@@ -648,37 +643,45 @@ impl AddGameDialog {
     }
 
     /// View the buttons section
-    fn view_buttons(&self, i18n: &I18n) -> Element<AddGameMessage> {
+    fn view_buttons(&self, i18n: &I18n) -> Element<'_, AddGameMessage> {
         // Show error if any
-        let error = if let Some(ref error) = self.error_message {
+        let error: Element<'_, AddGameMessage> = if let Some(ref error) = self.error_message {
             column![
                 Space::with_height(Length::Fixed(5.0)),
                 text(error)
                     .size(12)
-                    .style(iced::theme::Text::Color(iced::Color::new(
-                        1.0, 0.0, 0.0, 1.0
-                    ))),
+                    .style(|_theme: &iced::Theme| iced::widget::text::Style {
+                        color: Some(iced::Color::new(1.0, 0.0, 0.0, 1.0)),
+                        ..Default::default()
+                    }),
             ]
+            .into()
         } else {
-            column![]
+            column![].into()
         };
 
         row![
             Space::with_width(Length::Fill),
-            button(text(i18n.t("Cancel")).size(14))
-                .on_press(AddGameMessage::Cancel)
-                .width(Length::Fixed(150.0)),
-            Space::with_width(Length::Fixed(10.0)),
-            button(text(i18n.t("Ok")).size(14))
-                .on_press(AddGameMessage::Confirm)
-                .width(Length::Fixed(150.0)),
+            column![
+                error,
+                row![
+                    button(text(i18n.t("Cancel")).size(14))
+                        .on_press(AddGameMessage::Cancel)
+                        .width(Length::Fixed(150.0)),
+                    Space::with_width(Length::Fixed(10.0)),
+                    button(text(i18n.t("Ok")).size(14))
+                        .on_press(AddGameMessage::Confirm)
+                        .width(Length::Fixed(150.0)),
+                ]
+                .spacing(10)
+            ]
         ]
         .spacing(10)
         .into()
     }
 
     /// View the Lossless Scaling dialog
-    fn view_lossless_dialog(&self, i18n: &I18n) -> Element<AddGameMessage> {
+    fn view_lossless_dialog(&self, i18n: &I18n) -> Element<'_, AddGameMessage> {
         column![
             text(i18n.t("Lossless Scaling Frame Generation")).size(18),
             Space::with_height(Length::Fixed(20.0)),

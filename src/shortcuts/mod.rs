@@ -3,7 +3,7 @@
 
 mod desktop_entry;
 
-pub use desktop_entry::{DesktopEntry, DesktopShortcutManager};
+pub use desktop_entry::DesktopShortcutManager;
 
 /// Shortcut location
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

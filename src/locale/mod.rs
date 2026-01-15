@@ -3,4 +3,4 @@
 
 pub mod i18n;
 
-pub use i18n::{detect_language, get_system_locale, I18n};
+pub use i18n::I18n;

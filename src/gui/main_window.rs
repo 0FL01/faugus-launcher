@@ -1,7 +1,6 @@
 // Main window implementation
 // Primary GUI window for Faugus Launcher using Iced
 
-use iced::event::{self, Event};
 use iced::widget::{
     button, column, container, horizontal_space, image, mouse_area, row, scrollable, text,
     text_input,
@@ -9,7 +8,7 @@ use iced::widget::{
 use iced::{Alignment, Element, Length, Task};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use tracing::{error, info, warn};
+use tracing::{error, info};
 
 use crate::config::{AppConfig, Game, InterfaceMode};
 use crate::icons::IconManager;
@@ -31,6 +30,7 @@ pub struct MainWindow {
     launch_controller: GameLaunchController,
     launch_status: HashMap<String, LaunchStatus>,
     icon_cache: HashMap<String, PathBuf>,
+    last_click: Option<(usize, std::time::Instant)>,
 }
 
 impl MainWindow {
@@ -62,6 +62,7 @@ impl MainWindow {
             launch_controller,
             launch_status,
             icon_cache,
+            last_click: None,
         }
     }
 
@@ -124,7 +125,7 @@ impl MainWindow {
     }
 
     /// Load icon for display
-    fn load_icon(&self, game_id: &str) -> Element<Message> {
+    fn load_icon(&self, game_id: &str) -> Element<'_, Message> {
         if let Some(icon_path) = self.get_icon_path(game_id) {
             // Check if icon file exists
             if icon_path.exists() {
@@ -156,7 +157,15 @@ impl MainWindow {
                 Task::none()
             }
             Message::GameClicked(index) => {
-                // Single click selects the game
+                // Check for double click
+                let now = std::time::Instant::now();
+                if let Some((last_index, last_time)) = self.last_click {
+                    if last_index == index && now.duration_since(last_time).as_millis() < 500 {
+                        self.last_click = None;
+                        return Task::done(Message::GameDoubleClicked(index));
+                    }
+                }
+                self.last_click = Some((index, now));
                 self.selected_game_index = Some(index);
                 Task::none()
             }
@@ -166,7 +175,7 @@ impl MainWindow {
                 if let Some(game) = self.games.get(index).cloned() {
                     info!("Launching game via double-click: {}", game.title);
                     let task = self.launch_controller.launch_game(game);
-                    return Task::chain(task, |msg| Task::done(Message::LaunchMessage(msg)));
+                    return task.map(Message::LaunchMessage);
                 }
                 Task::none()
             }
@@ -175,7 +184,7 @@ impl MainWindow {
                     if let Some(game) = self.games.get(index).cloned() {
                         info!("Launching game: {}", game.title);
                         let task = self.launch_controller.launch_game(game);
-                        return Task::chain(task, |msg| Task::done(Message::LaunchMessage(msg)));
+                        return task.map(Message::LaunchMessage);
                     }
                 }
                 Task::none()
@@ -223,12 +232,10 @@ impl MainWindow {
                                 if shortcuts.contains(&game.title) {
                                     if let Err(e) = shortcuts.remove(&game.title) {
                                         error!("Failed to remove Steam shortcut: {}", e);
+                                    } else if let Err(e) = shortcuts.save() {
+                                        error!("Failed to save Steam shortcuts: {}", e);
                                     } else {
-                                        if let Err(e) = shortcuts.save() {
-                                            error!("Failed to save Steam shortcuts: {}", e);
-                                        } else {
-                                            info!("Steam shortcut removed for: {}", game.title);
-                                        }
+                                        info!("Steam shortcut removed for: {}", game.title);
                                     }
                                 }
                             }
@@ -303,7 +310,7 @@ impl MainWindow {
     }
 
     /// View the window
-    pub fn view(&self) -> Element<Message> {
+    pub fn view(&self) -> Element<'_, Message> {
         let header = self.view_header();
         let content = self.view_content();
         let sidebar = self.view_sidebar();
@@ -318,7 +325,7 @@ impl MainWindow {
     }
 
     /// View the header
-    fn view_header(&self) -> Element<Message> {
+    fn view_header(&self) -> Element<'_, Message> {
         let version_text = format!("Version: {}", VERSION);
         row![
             text(self.title()).size(24),
@@ -332,7 +339,7 @@ impl MainWindow {
     }
 
     /// View the content area (games list)
-    fn view_content(&self) -> Element<Message> {
+    fn view_content(&self) -> Element<'_, Message> {
         match self.config.interface_mode {
             InterfaceMode::List => self.view_list_mode(),
             InterfaceMode::Blocks => self.view_blocks_mode(),
@@ -341,7 +348,7 @@ impl MainWindow {
     }
 
     /// View in list mode
-    fn view_list_mode(&self) -> Element<Message> {
+    fn view_list_mode(&self) -> Element<'_, Message> {
         let games_list: Vec<Element<Message>> = self
             .games
             .iter()
@@ -356,9 +363,12 @@ impl MainWindow {
 
                 // Dim the title if hidden
                 let title_text = if is_hidden {
-                    text(&game.title)
-                        .size(16)
-                        .style(iced::Color::from_rgb(0.6, 0.6, 0.6))
+                    text(&game.title).size(16).style(|_theme: &iced::Theme| {
+                        iced::widget::text::Style {
+                            color: Some(iced::Color::from_rgb(0.6, 0.6, 0.6)),
+                            ..Default::default()
+                        }
+                    })
                 } else {
                     text(&game.title).size(16)
                 };
@@ -378,15 +388,14 @@ impl MainWindow {
                         .padding(10)
                         .width(Length::Fill)
                         .style(if is_selected {
-                            iced::theme::Container::Box
+                            iced::widget::container::bordered_box
                         } else {
-                            iced::theme::Container::Transparent
+                            iced::widget::container::transparent
                         });
 
                 // Wrap in mouse_area for click handling
                 mouse_area(container)
                     .on_press(Message::GameClicked(index))
-                    .on_double_press(Message::GameDoubleClicked(index))
                     .into()
             })
             .collect();
@@ -398,7 +407,7 @@ impl MainWindow {
     }
 
     /// View in blocks mode
-    fn view_blocks_mode(&self) -> Element<Message> {
+    fn view_blocks_mode(&self) -> Element<'_, Message> {
         let games_blocks: Vec<Element<Message>> =
             self.games
                 .iter()
@@ -411,13 +420,14 @@ impl MainWindow {
                     // Load icon for this game (larger size for blocks)
                     let icon = if let Some(icon_path) = self.get_icon_path(&game.gameid) {
                         if icon_path.exists() {
-                            container(
-                                image(icon_path.clone())
-                                    .width(Length::Fixed(64.0))
-                                    .height(Length::Fixed(64.0)),
+                            Element::from(
+                                container(
+                                    image(iced::widget::image::Handle::from_path(icon_path))
+                                        .width(Length::Fixed(64.0))
+                                        .height(Length::Fixed(64.0)),
+                                )
+                                .align_x(iced::alignment::Horizontal::Center),
                             )
-                            .align_x(iced::alignment::Horizontal::Center)
-                            .into()
                         } else {
                             container(text("🎮").size(48))
                                 .align_x(iced::alignment::Horizontal::Center)
@@ -431,9 +441,12 @@ impl MainWindow {
 
                     // Dim the title if hidden
                     let title_text = if is_hidden {
-                        text(&game.title).size(14).style(iced::theme::Text::Color(
-                            iced::Color::from_rgb(0.6, 0.6, 0.6),
-                        ))
+                        text(&game.title).size(14).style(|_theme: &iced::Theme| {
+                            iced::widget::text::Style {
+                                color: Some(iced::Color::from_rgb(0.6, 0.6, 0.6)),
+                                ..Default::default()
+                            }
+                        })
                     } else {
                         text(&game.title).size(14)
                     };
@@ -444,15 +457,14 @@ impl MainWindow {
 
                     let container = container(content).padding(10).width(200).height(180).style(
                         if is_selected {
-                            iced::theme::Container::Box
+                            iced::widget::container::bordered_box
                         } else {
-                            iced::theme::Container::Transparent
+                            iced::widget::container::transparent
                         },
                     );
 
                     mouse_area(container)
                         .on_press(Message::GameClicked(index))
-                        .on_double_press(Message::GameDoubleClicked(index))
                         .into()
                 })
                 .collect();
@@ -464,7 +476,7 @@ impl MainWindow {
     }
 
     /// View in banners mode
-    fn view_banners_mode(&self) -> Element<Message> {
+    fn view_banners_mode(&self) -> Element<'_, Message> {
         let games_banners: Vec<Element<Message>> = self
             .games
             .iter()
@@ -477,13 +489,14 @@ impl MainWindow {
                 // Load large icon for banner
                 let icon = if let Some(icon_path) = self.get_icon_path(&game.gameid) {
                     if icon_path.exists() {
-                        container(
-                            image(icon_path.clone())
-                                .width(Length::Fixed(128.0))
-                                .height(Length::Fixed(128.0)),
+                        Element::from(
+                            container(
+                                image(iced::widget::image::Handle::from_path(icon_path))
+                                    .width(Length::Fixed(128.0))
+                                    .height(Length::Fixed(128.0)),
+                            )
+                            .align_x(iced::alignment::Horizontal::Center),
                         )
-                        .align_x(iced::alignment::Horizontal::Center)
-                        .into()
                     } else {
                         container(text("🎮").size(96))
                             .align_x(iced::alignment::Horizontal::Center)
@@ -497,9 +510,12 @@ impl MainWindow {
 
                 // Dim the title if hidden
                 let title_text = if is_hidden {
-                    text(&game.title)
-                        .size(16)
-                        .style(iced::Color::from_rgb(0.6, 0.6, 0.6))
+                    text(&game.title).size(16).style(|_theme: &iced::Theme| {
+                        iced::widget::text::Style {
+                            color: Some(iced::Color::from_rgb(0.6, 0.6, 0.6)),
+                            ..Default::default()
+                        }
+                    })
                 } else {
                     text(&game.title).size(16)
                 };
@@ -519,14 +535,13 @@ impl MainWindow {
                     .width(460)
                     .height(banner_height)
                     .style(if is_selected {
-                        iced::theme::Container::Box
+                        iced::widget::container::bordered_box
                     } else {
-                        iced::theme::Container::Transparent
+                        iced::widget::container::transparent
                     });
 
                 mouse_area(container)
                     .on_press(Message::GameClicked(index))
-                    .on_double_press(Message::GameDoubleClicked(index))
                     .into()
             })
             .collect();
@@ -538,7 +553,7 @@ impl MainWindow {
     }
 
     /// View the sidebar
-    fn view_sidebar(&self) -> Element<Message> {
+    fn view_sidebar(&self) -> Element<'_, Message> {
         let search = text_input(&self.i18n.t("Search games..."), &self.search_query)
             .on_input(Message::SearchChanged)
             .padding(10)
@@ -656,7 +671,7 @@ impl MainWindow {
 
         // Check if hidden games should be shown
         let matches_hidden = if game.hidden {
-            self.config.show_hidden_games
+            self.config.show_hidden
         } else {
             true
         };

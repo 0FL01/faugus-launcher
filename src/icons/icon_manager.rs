@@ -23,7 +23,7 @@ pub struct IconManager;
 
 impl IconManager {
     /// Extract icon from a Windows executable
-    pub fn extract_from_exe(exe_path: &PathBuf, game_id: &str) -> Result<PathBuf> {
+    pub fn extract_from_exe(exe_path: &std::path::Path, game_id: &str) -> Result<PathBuf> {
         info!("Extracting icon from: {:?}", exe_path);
 
         // Create icons directory if it doesn't exist
@@ -55,7 +55,7 @@ impl IconManager {
     }
 
     /// Extract icon using wrestool (preferred method)
-    fn extract_with_wrestool(exe_path: &PathBuf, game_id: &str) -> Result<PathBuf> {
+    fn extract_with_wrestool(exe_path: &std::path::Path, game_id: &str) -> Result<PathBuf> {
         let icons_dir = Paths::icons_dir();
         let temp_ico = icons_dir.join(format!("{}_temp.ico", game_id));
         let icon_path = icons_dir.join(format!("{}.png", game_id));
@@ -92,7 +92,7 @@ impl IconManager {
     }
 
     /// Extract icon using icoutils alternative method
-    fn extract_with_icoutils(exe_path: &PathBuf, game_id: &str) -> Result<PathBuf> {
+    fn extract_with_icoutils(exe_path: &std::path::Path, game_id: &str) -> Result<PathBuf> {
         let icons_dir = Paths::icons_dir();
         let temp_dir = icons_dir.join(format!("{}_temp", game_id));
 
@@ -109,7 +109,7 @@ impl IconManager {
             .arg(exe_path)
             .output();
 
-        if output.ok().map_or(false, |r| r.status.success()) {
+        if output.ok().is_some_and(|r| r.status.success()) {
             // Find the largest .ico file
             if let Some(largest_ico) = Self::find_largest_icon(&temp_dir) {
                 let icon_path = icons_dir.join(format!("{}.png", game_id));
@@ -127,14 +127,14 @@ impl IconManager {
     }
 
     /// Find the largest icon file in a directory
-    fn find_largest_icon(dir: &PathBuf) -> Option<PathBuf> {
+    fn find_largest_icon(dir: &std::path::Path) -> Option<PathBuf> {
         let entries = fs::read_dir(dir).ok()?;
         let mut largest = None;
         let mut largest_size = 0;
 
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.extension().map_or(false, |e| e == "ico") {
+            if path.extension().is_some_and(|e| e == "ico") {
                 if let Ok(metadata) = fs::metadata(&path) {
                     let size = metadata.len();
                     if size > largest_size {
@@ -149,7 +149,7 @@ impl IconManager {
     }
 
     /// Convert .ico file to .png
-    fn convert_ico_to_png(ico_path: &PathBuf, png_path: &PathBuf) -> Result<()> {
+    fn convert_ico_to_png(ico_path: &std::path::Path, png_path: &std::path::Path) -> Result<()> {
         // Try using icotool first (part of icoutils)
         if let Ok(result) = Command::new("icotool")
             .arg("-x")
@@ -196,14 +196,14 @@ impl IconManager {
     }
 
     /// Find the largest PNG file in a directory
-    fn find_largest_png(dir: &PathBuf) -> Option<PathBuf> {
+    fn find_largest_png(dir: &std::path::Path) -> Option<PathBuf> {
         let entries = fs::read_dir(dir).ok()?;
         let mut largest = None;
         let mut largest_size = 0;
 
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.extension().map_or(false, |e| e == "png") {
+            if path.extension().is_some_and(|e| e == "png") {
                 if let Ok(metadata) = fs::metadata(&path) {
                     let size = metadata.len();
                     if size > largest_size {
@@ -218,14 +218,14 @@ impl IconManager {
     }
 
     /// Copy a custom icon for a game
-    pub fn copy_custom_icon(source: &PathBuf, game_id: &str) -> Result<PathBuf> {
+    pub fn copy_custom_icon(source: &std::path::Path, game_id: &str) -> Result<PathBuf> {
         let icons_dir = Paths::icons_dir();
         fs::create_dir_all(&icons_dir)?;
 
         let icon_path = icons_dir.join(format!("{}.png", game_id));
 
         // If source is not PNG, try to convert it
-        if source.extension().map_or(false, |e| e == "ico") {
+        if source.extension().is_some_and(|e| e == "ico") {
             Self::convert_ico_to_png(source, &icon_path)?;
         } else {
             fs::copy(source, &icon_path)?;
@@ -294,7 +294,7 @@ impl IconManager {
     }
 
     /// Get or extract icon for a game
-    pub fn get_or_extract_icon(exe_path: &PathBuf, game_id: &str) -> PathBuf {
+    pub fn get_or_extract_icon(exe_path: &std::path::Path, game_id: &str) -> PathBuf {
         if !Self::icon_exists(game_id) {
             if let Err(e) = Self::extract_from_exe(exe_path, game_id) {
                 warn!("Failed to extract icon: {}", e);
@@ -305,7 +305,7 @@ impl IconManager {
     }
 
     /// Update icon for a game (re-extract from exe or use custom)
-    pub fn update_icon(exe_path: &PathBuf, game_id: &str) -> Result<PathBuf> {
+    pub fn update_icon(exe_path: &std::path::Path, game_id: &str) -> Result<PathBuf> {
         // Remove old icon
         let _ = Self::delete_icon(game_id);
 

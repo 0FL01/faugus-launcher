@@ -10,7 +10,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
-use tracing::{error, info, warn};
+use tracing::info;
 
 use crate::config::paths::Paths;
 
@@ -57,7 +57,7 @@ pub const PROTON_CONFIGS: &[ProtonConfig] = &[
 ];
 
 /// Proton manager
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ProtonManager {
     client: Client,
     pub compat_dir: PathBuf,
@@ -188,7 +188,7 @@ impl ProtonManager {
     }
 
     /// Extract downloaded Proton archive
-    async fn extract_archive(&self, archive_path: &PathBuf, config: &ProtonConfig) -> Result<()> {
+    async fn extract_archive(&self, archive_path: &PathBuf, _config: &ProtonConfig) -> Result<()> {
         info!("Extracting {}", archive_path.display());
 
         let compat_dir = &self.compat_dir;
