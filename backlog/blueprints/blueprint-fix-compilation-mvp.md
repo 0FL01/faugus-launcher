@@ -186,3 +186,24 @@ flowchart TD
 | cargo clippy has no errors | D14 |
 | cargo build --release succeeds | D15 |
 | Binary executable created in target/release | T1 |
+
+---
+
+## Handover Note (2026-01-15)
+
+**Status**: ✅ MVP Compilation Fixed
+
+**Completed Actions**:
+- **Structural**: Resolved recursive `Message` types in `ConfirmationDialog` using `Box`.
+- **Iced 0.13 API**:
+  - Migrated `Container` and `Text` styles to closure-based API.
+  - Updated `text_input` to take placeholder as the first argument.
+  - Implemented manual double-click detection (since `on_double_press` was removed).
+- **Async/Task**: Updated `Task::chain` to `task.map`.
+- **Tray**: Integrated `notify-rust` for notifications and updated `tray-icon` builder pattern.
+- **Types**: Fixed `Path`/`PathBuf` mismatches and added `PartialEq` derives.
+
+**Technical Debt / Next Steps**:
+- **Warnings**: `cargo check` passes but emits unused code warnings. These should be addressed as features are fully implemented.
+- **Testing**: `cargo build --release` should be run to verify final binary linking.
+- **Runtime Testing**: The double-click workaround and tray notifications need manual verification on the target OS.
