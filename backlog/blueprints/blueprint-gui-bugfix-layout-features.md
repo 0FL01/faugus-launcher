@@ -221,11 +221,18 @@ flowchart TD
 
 ---
 
-## Phase Dependencies Summary
+## Handover Note (Phase 1 Complete)
 
-Phase 1 является блокером для всех остальных фаз, так как без рабочих диалогов невозможно:
-- Тестировать контекстное меню (Phase 2) — оно использует тот же overlay механизм
-- Запускать Winetricks (Phase 3) — требует выбора prefix в Settings
-- Добавлять баннеры (Phase 4) — требует рабочего Add Game диалога
+### What was done:
+- **Stack Implementation**: Refactored `src/main.rs` to use `iced::widget::Stack`. The main window content is now always rendered as the base layer, with dialogs rendered as an overlay.
+- **Modal Centering**: Dialogs are now wrapped in a `container` that fills the screen, centers the dialog content (`center_x`, `center_y`), and provides a semi-transparent black backdrop (80% opacity).
+- **Confirmation Dialog Fix**: Removed the broken `row![background, dialog]` layout in `src/gui/confirmation_dialog.rs`. It now returns only the dialog box content, which is correctly positioned by the `Stack` in `main.rs`.
+- **Enum Optimization**: Boxed large variants in `DialogState` (`AddGame`, `Settings`, `LogViewer`, `ProtonManager`) to reduce memory footprint and satisfy Clippy.
+- **Quality Control**: `cargo check` and `cargo clippy` pass (excluding unrelated pre-existing warnings).
 
-После завершения Phase 1, фазы 2-4 могут выполняться параллельно разными разработчиками.
+### Technical Debt:
+- **Redundant Padding**: Some dialogs (like `AddGameDialog`) have their own internal padding which, when combined with the padding in `main.rs`, results in larger margins. This is acceptable for MVP but could be unified later.
+- **Backdrop Color**: Hardcoded to `rgba(0, 0, 0, 0.8)`. Could be moved to a theme-based constant.
+
+### Status:
+Phase 1 is **COMPLETE**. The layout bug is fixed, and dialog buttons should now be visible and functional. Phase 2 (Context Menu), Phase 3 (Wine Tools), and Phase 4 (Kill All/Banners) are now **UNBLOCKED**.

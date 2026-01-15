@@ -19,9 +19,9 @@ use settings_dialog::SettingsDialog;
 #[derive(Debug, Clone)]
 pub enum DialogState {
     None,
-    AddGame(AddGameDialog),
-    Settings(SettingsDialog),
+    AddGame(Box<AddGameDialog>),
+    Settings(Box<SettingsDialog>),
     Confirmation(Box<ConfirmationDialog>),
-    LogViewer(LogViewerDialog),
-    ProtonManager(ProtonManagerDialog),
+    LogViewer(Box<LogViewerDialog>),
+    ProtonManager(Box<ProtonManagerDialog>),
 }

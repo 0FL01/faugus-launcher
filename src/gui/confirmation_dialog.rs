@@ -64,14 +64,8 @@ impl ConfirmationDialog {
 
     /// View the confirmation dialog
     pub fn view(&self, i18n: &I18n) -> Element<'_, Message> {
-        // Background overlay
-        let background = container(Space::new(Length::Fill, Length::Fill))
-            .width(Length::Fill)
-            .height(Length::Fill)
-            .style(container::transparent);
-
         // Dialog container
-        let dialog = container(
+        container(
             column![
                 // Title
                 container(text(&self.title).size(20))
@@ -103,15 +97,8 @@ impl ConfirmationDialog {
             .max_width(400),
         )
         .padding(20)
-        .style(container::bordered_box);
-
-        // Stack background and dialog
-        container(row![background, dialog])
-            .width(Length::Fill)
-            .height(Length::Fill)
-            .align_x(iced::alignment::Horizontal::Center)
-            .align_y(iced::alignment::Vertical::Center)
-            .into()
+        .style(container::bordered_box)
+        .into()
     }
 }
 

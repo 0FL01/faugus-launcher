@@ -12,8 +12,8 @@ mod steam;
 mod tray;
 mod utils;
 
-use iced::widget::{column, container, text};
-use iced::{window, Element, Size, Task};
+use iced::widget::{container, stack};
+use iced::{window, Color, Element, Length, Size, Task};
 use tracing::{error, info, warn};
 
 use config::app_config::AppConfig;
@@ -162,7 +162,7 @@ impl FaugusLauncher {
             }
             Message::ShowAddGameDialog => {
                 let dialog = AddGameDialog::new(self.main_window.config(), self.main_window.i18n());
-                self.dialog = DialogState::AddGame(dialog);
+                self.dialog = DialogState::AddGame(Box::new(dialog));
                 Task::none()
             }
             Message::ShowEditGameDialog(index) => {
@@ -172,24 +172,24 @@ impl FaugusLauncher {
                         self.main_window.config(),
                         self.main_window.i18n(),
                     );
-                    self.dialog = DialogState::AddGame(dialog);
+                    self.dialog = DialogState::AddGame(Box::new(dialog));
                 }
                 Task::none()
             }
             Message::ShowSettingsDialog => {
                 let config = self.main_window.config().clone();
                 let dialog = SettingsDialog::new(config);
-                self.dialog = DialogState::Settings(dialog);
+                self.dialog = DialogState::Settings(Box::new(dialog));
                 Task::none()
             }
             Message::ShowLogViewerDialog => {
                 let dialog = LogViewerDialog::new();
-                self.dialog = DialogState::LogViewer(dialog);
+                self.dialog = DialogState::LogViewer(Box::new(dialog));
                 Task::none()
             }
             Message::ShowProtonManagerDialog => {
                 let dialog = ProtonManagerDialog::new();
-                self.dialog = DialogState::ProtonManager(dialog);
+                self.dialog = DialogState::ProtonManager(Box::new(dialog));
                 Task::none()
             }
             Message::ShowConfirmationDialog(dialog) => {
@@ -548,124 +548,68 @@ impl FaugusLauncher {
     }
 
     fn view(&self) -> Element<'_, Message> {
-        match &self.dialog {
-            DialogState::None => self.main_window.view(),
-            DialogState::AddGame(dialog) => {
-                // Show dialog overlay
-                let _main_content = self.main_window.view();
+        let main_content = self.main_window.view();
 
-                // Create an overlay with the dialog
-                let dialog_view = dialog
-                    .view(self.main_window.i18n())
-                    .map(Message::AddGameDialog);
-
-                // Create a semi-transparent backdrop
-                let backdrop = container(text(""))
-                    .width(iced::Length::Fill)
-                    .height(iced::Length::Fill)
-                    .style(iced::widget::container::transparent);
-
-                // Stack the dialog on top
-                container(column![
-                    backdrop,
-                    container(dialog_view)
-                        .width(iced::Length::Fixed(600.0))
-                        .height(iced::Length::Fill)
-                        .padding(20)
-                ])
-                .width(iced::Length::Fill)
-                .height(iced::Length::Fill)
-                .into()
-            }
-            DialogState::Settings(dialog) => {
-                // Show dialog overlay
-                let _main_content = self.main_window.view();
-
-                // Create an overlay with the dialog
-                let dialog_view = dialog
-                    .view(self.main_window.i18n())
-                    .map(Message::SettingsDialog);
-
-                // Create a semi-transparent backdrop
-                let backdrop = container(text(""))
-                    .width(iced::Length::Fill)
-                    .height(iced::Length::Fill)
-                    .style(iced::widget::container::transparent);
-
-                // Stack the dialog on top
-                container(column![
-                    backdrop,
-                    container(dialog_view)
-                        .width(iced::Length::Fixed(700.0))
-                        .height(iced::Length::Fill)
-                        .padding(20)
-                ])
-                .width(iced::Length::Fill)
-                .height(iced::Length::Fill)
-                .into()
-            }
-            DialogState::LogViewer(dialog) => {
-                // Show log viewer overlay
-                let _main_content = self.main_window.view();
-
-                // Create an overlay with the dialog
-                let dialog_view = dialog
-                    .view(self.main_window.i18n())
-                    .map(Message::LogViewerDialog);
-
-                // Create a semi-transparent backdrop
-                let backdrop = container(text(""))
-                    .width(iced::Length::Fill)
-                    .height(iced::Length::Fill)
-                    .style(iced::widget::container::transparent);
-
-                // Stack the dialog on top
-                container(column![
-                    backdrop,
-                    container(dialog_view)
-                        .width(iced::Length::Fixed(900.0))
-                        .height(iced::Length::Fill)
-                        .padding(20)
-                ])
-                .width(iced::Length::Fill)
-                .height(iced::Length::Fill)
-                .into()
-            }
-            DialogState::ProtonManager(dialog) => {
-                // Show proton manager overlay
-                let _main_content = self.main_window.view();
-
-                // Create an overlay with the dialog
-                let dialog_view = dialog
-                    .view(self.main_window.i18n())
-                    .map(Message::ProtonManagerDialog);
-
-                // Create a semi-transparent backdrop
-                let backdrop = container(text(""))
-                    .width(iced::Length::Fill)
-                    .height(iced::Length::Fill)
-                    .style(iced::widget::container::transparent);
-
-                // Stack the dialog on top
-                container(column![
-                    backdrop,
-                    container(dialog_view)
-                        .width(iced::Length::Fixed(800.0))
-                        .height(iced::Length::Fill)
-                        .padding(20)
-                ])
-                .width(iced::Length::Fill)
-                .height(iced::Length::Fill)
-                .into()
-            }
-            DialogState::Confirmation(dialog) => {
-                // Show confirmation dialog overlay
-                let _main_content = self.main_window.view();
-
-                // The dialog already includes the overlay in its view method
-                dialog.view(self.main_window.i18n())
-            }
+        if let DialogState::None = self.dialog {
+            return main_content;
         }
+
+        let dialog_content: Element<'_, Message> = match &self.dialog {
+            DialogState::None => unreachable!(),
+            DialogState::AddGame(dialog) => container(
+                dialog
+                    .view(self.main_window.i18n())
+                    .map(Message::AddGameDialog),
+            )
+            .width(Length::Fixed(600.0))
+            .padding(20)
+            .style(container::bordered_box)
+            .into(),
+
+            DialogState::Settings(dialog) => container(
+                dialog
+                    .view(self.main_window.i18n())
+                    .map(Message::SettingsDialog),
+            )
+            .width(Length::Fixed(700.0))
+            .padding(20)
+            .style(container::bordered_box)
+            .into(),
+
+            DialogState::LogViewer(dialog) => container(
+                dialog
+                    .view(self.main_window.i18n())
+                    .map(Message::LogViewerDialog),
+            )
+            .width(Length::Fixed(900.0))
+            .padding(20)
+            .style(container::bordered_box)
+            .into(),
+
+            DialogState::ProtonManager(dialog) => container(
+                dialog
+                    .view(self.main_window.i18n())
+                    .map(Message::ProtonManagerDialog),
+            )
+            .width(Length::Fixed(800.0))
+            .padding(20)
+            .style(container::bordered_box)
+            .into(),
+
+            DialogState::Confirmation(dialog) => dialog.view(self.main_window.i18n()),
+        };
+
+        let modal = container(dialog_content)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .center_x(Length::Fill)
+            .center_y(Length::Fill)
+            .style(|_theme| container::Style {
+                background: Some(Color::from_rgba(0.0, 0.0, 0.0, 0.8).into()),
+                ..Default::default()
+            });
+
+        stack![main_content, modal].into()
     }
 }
 
