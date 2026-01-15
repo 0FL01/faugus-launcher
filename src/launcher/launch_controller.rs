@@ -37,14 +37,18 @@ impl GameLaunchController {
     /// Get the launch status of a game
     pub fn get_status(&self, title: &str) -> LaunchStatus {
         let games = self.running_games.lock().unwrap();
-        games.get(title)
+        games
+            .get(title)
             .cloned()
             .unwrap_or(LaunchStatus::NotRunning)
     }
 
     /// Check if a game is currently running
     pub fn is_running(&self, title: &str) -> bool {
-        matches!(self.get_status(title), LaunchStatus::Running(_) | LaunchStatus::Launching)
+        matches!(
+            self.get_status(title),
+            LaunchStatus::Running(_) | LaunchStatus::Launching
+        )
     }
 
     /// Launch a game
@@ -99,7 +103,7 @@ impl GameLaunchController {
                     }
                 }
             },
-            |msg| msg
+            |msg| msg,
         )
     }
 
@@ -126,15 +130,9 @@ impl GameLaunchController {
 
                 Ok(())
             }
-            LaunchStatus::Launching => {
-                Err("Game is still launching, please wait".to_string())
-            }
-            LaunchStatus::NotRunning => {
-                Err("Game is not running".to_string())
-            }
-            LaunchStatus::Error(_) => {
-                Err("Game launch failed".to_string())
-            }
+            LaunchStatus::Launching => Err("Game is still launching, please wait".to_string()),
+            LaunchStatus::NotRunning => Err("Game is not running".to_string()),
+            LaunchStatus::Error(_) => Err("Game launch failed".to_string()),
         }
     }
 
@@ -156,7 +154,8 @@ impl GameLaunchController {
     pub fn get_running_games(&self) -> Vec<(String, GameProcess)> {
         let games = self.running_games.lock().unwrap();
 
-        games.iter()
+        games
+            .iter()
             .filter_map(|(title, status)| {
                 if let LaunchStatus::Running(process) = status {
                     Some((title.clone(), process.clone()))

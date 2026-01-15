@@ -2,14 +2,16 @@
 // Dialog for managing Proton versions
 
 use iced::widget::{
-    button, column, container, row, scrollable, text, text_input, Space, horizontal_rule,
+    button, column, container, horizontal_rule, row, scrollable, text, text_input, Space,
 };
 use iced::{Alignment, Element, Length, Task};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
 use crate::locale::I18n;
-use crate::proton::proton_manager::{ProtonAsset, ProtonConfig, ProtonManager, ProtonRelease, PROTON_CONFIGS};
+use crate::proton::proton_manager::{
+    ProtonAsset, ProtonConfig, ProtonManager, ProtonRelease, PROTON_CONFIGS,
+};
 
 /// Messages for the Proton Manager
 #[derive(Debug, Clone)]
@@ -58,7 +60,9 @@ impl ProtonVersionEntry {
             tag_name.clone()
         };
 
-        let size = release.assets.iter()
+        let size = release
+            .assets
+            .iter()
             .find(|a| a.name.ends_with(".tar.gz") || a.name.ends_with(".tar.xz"))
             .map(|a| a.size)
             .unwrap_or(0);
@@ -156,9 +160,11 @@ impl ProtonManagerDialog {
                             if let Some(release) = release {
                                 ProtonManagerMessage::ReleasesFetched(index, vec![release])
                             } else {
-                                ProtonManagerMessage::FetchError("Failed to fetch release".to_string())
+                                ProtonManagerMessage::FetchError(
+                                    "Failed to fetch release".to_string(),
+                                )
                             }
-                        }
+                        },
                     ));
                 }
 
@@ -180,14 +186,16 @@ impl ProtonManagerDialog {
                         release.tag_name.clone()
                     };
 
-                    let is_installed = installed_versions.iter()
+                    let is_installed = installed_versions
+                        .iter()
                         .any(|v| v.to_lowercase() == tag_name.to_lowercase());
 
                     let entry = ProtonVersionEntry::new(&release, is_installed);
 
                     if tab_index < self.releases.len() {
                         // Only add if not already in list
-                        let exists = self.releases[tab_index].iter()
+                        let exists = self.releases[tab_index]
+                            .iter()
                             .any(|e| e.tag_name == release.tag_name);
 
                         if !exists {
@@ -206,7 +214,8 @@ impl ProtonManagerDialog {
                 }
 
                 // Find and update entry
-                if let Some(entry) = self.releases[tab_index].iter_mut()
+                if let Some(entry) = self.releases[tab_index]
+                    .iter_mut()
                     .find(|e| e.tag_name == tag_name)
                 {
                     entry.downloading = true;
@@ -233,7 +242,8 @@ impl ProtonManagerDialog {
                 };
 
                 // Try to find and remove
-                if let Some(entry) = self.releases[tab_index].iter()
+                if let Some(entry) = self.releases[tab_index]
+                    .iter()
                     .find(|e| e.tag_name == tag_name)
                 {
                     let path = self.compat_dir.join(&display_name);
@@ -243,7 +253,8 @@ impl ProtonManagerDialog {
                             self.error_message = Some(format!("Failed to remove: {}", e));
                         } else {
                             // Update entry state
-                            if let Some(entry) = self.releases[tab_index].iter_mut()
+                            if let Some(entry) = self.releases[tab_index]
+                                .iter_mut()
                                 .find(|e| e.tag_name == tag_name)
                             {
                                 entry.installed = false;
@@ -260,7 +271,8 @@ impl ProtonManagerDialog {
                 };
 
                 self.progress_value = progress;
-                self.progress_label = format!("Downloading {}... {:.0}%", tag_name, progress * 100.0);
+                self.progress_label =
+                    format!("Downloading {}... {:.0}%", tag_name, progress * 100.0);
 
                 // Update entry progress
                 for releases in &mut self.releases {
@@ -314,7 +326,11 @@ impl ProtonManagerDialog {
         let error_section = if let Some(ref error) = self.error_message {
             column![
                 Space::with_height(Length::Fixed(10.0)),
-                text(error).size(12).style(iced::theme::Text::Color(iced::Color::new(1.0, 0.0, 0.0, 1.0))),
+                text(error)
+                    .size(12)
+                    .style(iced::theme::Text::Color(iced::Color::new(
+                        1.0, 0.0, 0.0, 1.0
+                    ))),
             ]
         } else {
             column![]
@@ -348,9 +364,7 @@ impl ProtonManagerDialog {
             tabs = tabs.push(tab_button);
         }
 
-        container(tabs.spacing(10))
-            .padding(10)
-            .into()
+        container(tabs.spacing(10)).padding(10).into()
     }
 
     /// View content area
@@ -369,8 +383,7 @@ impl ProtonManagerDialog {
             return column![
                 text("No releases found").size(14),
                 Space::with_height(Length::Fixed(10.0)),
-                button(text("Refresh").size(14))
-                    .on_press(ProtonManagerMessage::RefreshClicked),
+                button(text("Refresh").size(14)).on_press(ProtonManagerMessage::RefreshClicked),
             ]
             .spacing(5)
             .into();
@@ -391,7 +404,11 @@ impl ProtonManagerDialog {
     }
 
     /// View a single release row
-    fn view_release_row(&self, release: &ProtonVersionEntry, i18n: &I18n) -> Element<ProtonManagerMessage> {
+    fn view_release_row(
+        &self,
+        release: &ProtonVersionEntry,
+        i18n: &I18n,
+    ) -> Element<ProtonManagerMessage> {
         let version_text = text(&release.display_name).size(14);
         let size_text = text(format_size(release.size)).size(12);
 
@@ -403,8 +420,7 @@ impl ProtonManagerDialog {
             "Download".to_string()
         };
 
-        let action_button = button(text(button_text).size(12))
-            .width(Length::Fixed(120.0));
+        let action_button = button(text(button_text).size(12)).width(Length::Fixed(120.0));
 
         let action_button = if release.downloading {
             action_button
@@ -453,8 +469,7 @@ impl ProtonManagerDialog {
     /// View buttons
     fn view_buttons(&self, i18n: &I18n) -> Element<ProtonManagerMessage> {
         row![
-            button(text("Refresh").size(14))
-                .on_press(ProtonManagerMessage::RefreshClicked),
+            button(text("Refresh").size(14)).on_press(ProtonManagerMessage::RefreshClicked),
             Space::with_width(Length::Fill),
             button(text(i18n.t("Close")).size(14))
                 .on_press(ProtonManagerMessage::Close)

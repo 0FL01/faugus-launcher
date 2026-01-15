@@ -24,12 +24,12 @@ use gui::confirmation_dialog::ConfirmationDialog;
 use gui::log_viewer_dialog::{LogViewerDialog, LogViewerMessage};
 use gui::main_window::MainWindow;
 use gui::settings_dialog::{SettingsDialog, SettingsMessage};
+use icons::IconManager;
 use launcher::{LaunchMessage, LaunchStatus};
 use locale::i18n::I18n;
 use shortcuts::DesktopShortcutManager;
 use shortcuts::ShortcutLocation;
 use steam::SteamShortcuts;
-use icons::IconManager;
 use tray::{SystemTray, TrayConfig, TrayEvent, TrayMessage};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -74,7 +74,7 @@ pub enum Message {
     // System Tray messages
     TrayEvent(TrayEvent),
     // Confirmation Dialog
-    ShowConfirmationDialog(ConfirmationDialog),
+    ShowConfirmationDialog(Box<ConfirmationDialog>),
     ConfirmationDialogClosed(bool),
 }
 
@@ -222,7 +222,7 @@ impl FaugusLauncher {
                             Message::ConfirmationDialogClosed(false),
                         );
 
-                        return Task::done(Message::ShowConfirmationDialog(dialog));
+                        return Task::done(Message::ShowConfirmationDialog(Box::new(dialog)));
                     }
                 }
                 Task::none()
@@ -232,7 +232,9 @@ impl FaugusLauncher {
                 // Pass through to main_window for actual deletion
                 self.main_window.update(Message::DeleteConfirmed(index))
             }
-            Message::CloseAddGameDialog | Message::CloseSettingsDialog | Message::CloseLogViewerDialog => {
+            Message::CloseAddGameDialog
+            | Message::CloseSettingsDialog
+            | Message::CloseLogViewerDialog => {
                 self.dialog = DialogState::None;
                 Task::none()
             }
@@ -256,8 +258,14 @@ impl FaugusLauncher {
 
                                         // Extract icon from executable if not exists
                                         if !IconManager::icon_exists(&game.gameid) {
-                                            if let Err(e) = IconManager::extract_from_exe(&game.path, &game.gameid) {
-                                                warn!("Failed to extract icon for {}: {}", game.title, e);
+                                            if let Err(e) = IconManager::extract_from_exe(
+                                                &game.path,
+                                                &game.gameid,
+                                            ) {
+                                                warn!(
+                                                    "Failed to extract icon for {}: {}",
+                                                    game.title, e
+                                                );
                                             } else {
                                                 info!("Icon extracted for: {}", game.title);
                                             }
@@ -270,23 +278,34 @@ impl FaugusLauncher {
                                                     error!("Failed to add Steam shortcut: {}", e);
                                                 } else {
                                                     if let Err(e) = shortcuts.save() {
-                                                        error!("Failed to save Steam shortcuts: {}", e);
+                                                        error!(
+                                                            "Failed to save Steam shortcuts: {}",
+                                                            e
+                                                        );
                                                     } else {
-                                                        info!("Steam shortcut added for: {}", game.title);
+                                                        info!(
+                                                            "Steam shortcut added for: {}",
+                                                            game.title
+                                                        );
                                                     }
                                                 }
                                             }
                                         }
 
                                         // Handle desktop shortcuts
-                                        let shortcut_location = match (add_desktop_shortcut, add_appmenu_shortcut) {
+                                        let shortcut_location = match (
+                                            add_desktop_shortcut,
+                                            add_appmenu_shortcut,
+                                        ) {
                                             (true, true) => ShortcutLocation::Both,
                                             (true, false) => ShortcutLocation::Desktop,
                                             (false, true) => ShortcutLocation::Applications,
                                             (false, false) => {
                                                 // Check if shortcuts exist and remove them
                                                 if DesktopShortcutManager::exists(&game) {
-                                                    if let Err(e) = DesktopShortcutManager::remove(&game) {
+                                                    if let Err(e) =
+                                                        DesktopShortcutManager::remove(&game)
+                                                    {
                                                         error!("Failed to remove desktop shortcuts: {}", e);
                                                     }
                                                 }
@@ -295,10 +314,16 @@ impl FaugusLauncher {
                                         };
 
                                         if add_desktop_shortcut || add_appmenu_shortcut {
-                                            if let Err(e) = DesktopShortcutManager::create(&game, shortcut_location) {
+                                            if let Err(e) = DesktopShortcutManager::create(
+                                                &game,
+                                                shortcut_location,
+                                            ) {
                                                 error!("Failed to create desktop shortcuts: {}", e);
                                             } else {
-                                                info!("Desktop shortcuts created for: {}", game.title);
+                                                info!(
+                                                    "Desktop shortcuts created for: {}",
+                                                    game.title
+                                                );
                                             }
                                         }
 
@@ -369,15 +394,13 @@ impl FaugusLauncher {
             Message::LogViewerDialog(msg) => {
                 // Handle log viewer dialog messages
                 let should_close = match &mut self.dialog {
-                    DialogState::LogViewer(dialog) => {
-                        match &msg {
-                            LogViewerMessage::Close => true,
-                            _ => {
-                                dialog.update(msg);
-                                false
-                            }
+                    DialogState::LogViewer(dialog) => match &msg {
+                        LogViewerMessage::Close => true,
+                        _ => {
+                            dialog.update(msg);
+                            false
                         }
-                    }
+                    },
                     DialogState::None => false,
                     DialogState::AddGame(_) => false,
                     DialogState::Settings(_) => false,
@@ -400,7 +423,15 @@ impl FaugusLauncher {
                         if let Err(e) = game.update_hidden(new_hidden_state) {
                             error!("Failed to update game hidden state: {}", e);
                         } else {
-                            info!("Game '{}' is now: {}", game.title, if new_hidden_state { "hidden" } else { "visible" });
+                            info!(
+                                "Game '{}' is now: {}",
+                                game.title,
+                                if new_hidden_state {
+                                    "hidden"
+                                } else {
+                                    "visible"
+                                }
+                            );
                             // Reload games to reflect the change
                             self.main_window.reload_games();
                         }
@@ -427,7 +458,9 @@ impl FaugusLauncher {
                             use icons::IconManager;
                             if IconManager::icon_exists(&game.gameid) {
                                 let original_icon = IconManager::get_icon_path(&game.gameid);
-                                if let Err(e) = IconManager::copy_custom_icon(&original_icon, &new_game.gameid) {
+                                if let Err(e) =
+                                    IconManager::copy_custom_icon(&original_icon, &new_game.gameid)
+                                {
                                     warn!("Failed to copy icon for duplicated game: {}", e);
                                 } else {
                                     info!("Icon copied for: {}", new_game.title);
@@ -439,7 +472,11 @@ impl FaugusLauncher {
 
                             // Open the edit dialog for the duplicated game
                             return Task::done(Message::ShowEditGameDialog(
-                                self.main_window.games().iter().position(|g| g.gameid == new_game.gameid).unwrap_or_default()
+                                self.main_window
+                                    .games()
+                                    .iter()
+                                    .position(|g| g.gameid == new_game.gameid)
+                                    .unwrap_or_default(),
                             ));
                         }
                     }
@@ -578,10 +615,14 @@ impl FaugusLauncher {
 }
 
 fn main() -> iced::Result {
-    iced::application("Faugus Launcher", FaugusLauncher::update, FaugusLauncher::view)
-        .window(window::Settings {
-            size: Size::new(1200.0, 800.0),
-            ..Default::default()
-        })
-        .run_with(|| FaugusLauncher::new())
+    iced::application(
+        "Faugus Launcher",
+        FaugusLauncher::update,
+        FaugusLauncher::view,
+    )
+    .window(window::Settings {
+        size: Size::new(1200.0, 800.0),
+        ..Default::default()
+    })
+    .run_with(|| FaugusLauncher::new())
 }

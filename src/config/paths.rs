@@ -316,7 +316,10 @@ impl Paths {
             PathBuf::from("/usr/lib/extensions/vulkan/lsfgvk/lib/liblsfg-vk.so"),
             PathBuf::from("/usr/lib/liblsfg-vk.so"),
             PathBuf::from("/usr/lib64/liblsfg-vk.so"),
-            PathBuf::from(format!("{}/.local/lib/liblsfg-vk.so", env::var("HOME").unwrap_or_default())),
+            PathBuf::from(format!(
+                "{}/.local/lib/liblsfg-vk.so",
+                env::var("HOME").unwrap_or_default()
+            )),
         ];
 
         for path in possible_paths {

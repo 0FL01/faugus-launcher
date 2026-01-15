@@ -211,12 +211,18 @@ impl AppConfig {
 
         // Write all configuration values
         content.push_str(&format!("close-onlaunch={}\n", self.close_on_launch));
-        content.push_str(&format!("default-prefix=\"{}\"\n", self.default_prefix.display()));
+        content.push_str(&format!(
+            "default-prefix=\"{}\"\n",
+            self.default_prefix.display()
+        ));
         content.push_str(&format!("mangohud={}\n", self.mangohud));
         content.push_str(&format!("gamemode={}\n", self.gamemode));
         content.push_str(&format!("disable-hidraw={}\n", self.disable_hidraw));
         content.push_str(&format!("default-runner=\"{}\"\n", self.default_runner));
-        content.push_str(&format!("lossless-location=\"{}\"\n", self.lossless_location.display()));
+        content.push_str(&format!(
+            "lossless-location=\"{}\"\n",
+            self.lossless_location.display()
+        ));
         content.push_str(&format!("discrete-gpu={}\n", self.discrete_gpu));
         content.push_str(&format!("splash-disable={}\n", self.splash_disable));
         content.push_str(&format!("system-tray={}\n", self.system_tray));

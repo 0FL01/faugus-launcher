@@ -154,17 +154,12 @@ impl ProtonManager {
         info!("Downloading {} ({})", asset.name, format_size(asset.size));
 
         // Ensure compat directory exists
-        fs::create_dir_all(&self.compat_dir)
-            .context("Failed to create compat tools directory")?;
+        fs::create_dir_all(&self.compat_dir).context("Failed to create compat tools directory")?;
 
         let download_path = self.compat_dir.join(&asset.name);
 
         // Download the file
-        let response = self
-            .client
-            .get(&asset.browser_download_url)
-            .send()
-            .await?;
+        let response = self.client.get(&asset.browser_download_url).send().await?;
 
         let total_size = response.content_length().unwrap_or(asset.size);
         let mut downloaded = 0u64;

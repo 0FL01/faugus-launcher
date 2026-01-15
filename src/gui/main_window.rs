@@ -1,11 +1,12 @@
 // Main window implementation
 // Primary GUI window for Faugus Launcher using Iced
 
+use iced::event::{self, Event};
 use iced::widget::{
-    button, column, container, horizontal_space, mouse_area, row, scrollable, text, text_input, image,
+    button, column, container, horizontal_space, image, mouse_area, row, scrollable, text,
+    text_input,
 };
 use iced::{Alignment, Element, Length, Task};
-use iced::event::{self, Event};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use tracing::{error, info, warn};
@@ -41,7 +42,10 @@ impl MainWindow {
 
         // Check initial launch status for all games
         for game in &games {
-            launch_status.insert(game.title.clone(), launch_controller.get_status(&game.title));
+            launch_status.insert(
+                game.title.clone(),
+                launch_controller.get_status(&game.title),
+            );
             // Cache icon paths
             let icon_path = IconManager::get_icon_path(&game.gameid);
             if icon_path.exists() {
@@ -193,7 +197,13 @@ impl MainWindow {
             }
             Message::EditClicked => {
                 if let Some(index) = self.selected_game_index {
-                    info!("Edit game: {}", self.games.get(index).map(|g| g.title.as_str()).unwrap_or("unknown"));
+                    info!(
+                        "Edit game: {}",
+                        self.games
+                            .get(index)
+                            .map(|g| g.title.as_str())
+                            .unwrap_or("unknown")
+                    );
                     Task::done(Message::ShowEditGameDialog(index))
                 } else {
                     Task::none()
@@ -363,14 +373,15 @@ impl MainWindow {
                 .padding(10)
                 .align_y(Alignment::Center);
 
-                let container = container(game_row)
-                    .padding(10)
-                    .width(Length::Fill)
-                    .style(if is_selected {
-                        iced::theme::Container::Box
-                    } else {
-                        iced::theme::Container::Transparent
-                    });
+                let container =
+                    container(game_row)
+                        .padding(10)
+                        .width(Length::Fill)
+                        .style(if is_selected {
+                            iced::theme::Container::Box
+                        } else {
+                            iced::theme::Container::Transparent
+                        });
 
                 // Wrap in mouse_area for click handling
                 mouse_area(container)
@@ -388,69 +399,63 @@ impl MainWindow {
 
     /// View in blocks mode
     fn view_blocks_mode(&self) -> Element<Message> {
-        let games_blocks: Vec<Element<Message>> = self
-            .games
-            .iter()
-            .filter(|game| self.game_matches_search(game))
-            .enumerate()
-            .map(|(index, game)| {
-                let is_selected = self.selected_game_index == Some(index);
-                let is_hidden = game.hidden;
+        let games_blocks: Vec<Element<Message>> =
+            self.games
+                .iter()
+                .filter(|game| self.game_matches_search(game))
+                .enumerate()
+                .map(|(index, game)| {
+                    let is_selected = self.selected_game_index == Some(index);
+                    let is_hidden = game.hidden;
 
-                // Load icon for this game (larger size for blocks)
-                let icon = if let Some(icon_path) = self.get_icon_path(&game.gameid) {
-                    if icon_path.exists() {
-                        container(image(icon_path.clone())
-                            .width(Length::Fixed(64.0))
-                            .height(Length::Fixed(64.0)))
+                    // Load icon for this game (larger size for blocks)
+                    let icon = if let Some(icon_path) = self.get_icon_path(&game.gameid) {
+                        if icon_path.exists() {
+                            container(
+                                image(icon_path.clone())
+                                    .width(Length::Fixed(64.0))
+                                    .height(Length::Fixed(64.0)),
+                            )
                             .align_x(iced::alignment::Horizontal::Center)
                             .into()
+                        } else {
+                            container(text("🎮").size(48))
+                                .align_x(iced::alignment::Horizontal::Center)
+                                .into()
+                        }
                     } else {
                         container(text("🎮").size(48))
                             .align_x(iced::alignment::Horizontal::Center)
                             .into()
-                    }
-                } else {
-                    container(text("🎮").size(48))
-                        .align_x(iced::alignment::Horizontal::Center)
-                        .into()
-                };
+                    };
 
-                // Dim the title if hidden
-                let title_text = if is_hidden {
-                    text(&game.title).size(14).style(iced::theme::Text::Color(iced::Color::from_rgb(
-                        0.6,
-                        0.6,
-                        0.6,
-                    )))
-                } else {
-                    text(&game.title).size(14)
-                };
-
-                let content = column![
-                    icon,
-                    title_text,
-                    text(game.format_playtime()).size(12),
-                ]
-                .spacing(5)
-                .align_x(Alignment::Center);
-
-                let container = container(content)
-                    .padding(10)
-                    .width(200)
-                    .height(180)
-                    .style(if is_selected {
-                        iced::theme::Container::Box
+                    // Dim the title if hidden
+                    let title_text = if is_hidden {
+                        text(&game.title).size(14).style(iced::theme::Text::Color(
+                            iced::Color::from_rgb(0.6, 0.6, 0.6),
+                        ))
                     } else {
-                        iced::theme::Container::Transparent
-                    });
+                        text(&game.title).size(14)
+                    };
 
-                mouse_area(container)
-                    .on_press(Message::GameClicked(index))
-                    .on_double_press(Message::GameDoubleClicked(index))
-                    .into()
-            })
-            .collect();
+                    let content = column![icon, title_text, text(game.format_playtime()).size(12),]
+                        .spacing(5)
+                        .align_x(Alignment::Center);
+
+                    let container = container(content).padding(10).width(200).height(180).style(
+                        if is_selected {
+                            iced::theme::Container::Box
+                        } else {
+                            iced::theme::Container::Transparent
+                        },
+                    );
+
+                    mouse_area(container)
+                        .on_press(Message::GameClicked(index))
+                        .on_double_press(Message::GameDoubleClicked(index))
+                        .into()
+                })
+                .collect();
 
         scrollable(row(games_blocks).spacing(10))
             .width(Length::Fill)
@@ -472,11 +477,13 @@ impl MainWindow {
                 // Load large icon for banner
                 let icon = if let Some(icon_path) = self.get_icon_path(&game.gameid) {
                     if icon_path.exists() {
-                        container(image(icon_path.clone())
-                            .width(Length::Fixed(128.0))
-                            .height(Length::Fixed(128.0)))
-                            .align_x(iced::alignment::Horizontal::Center)
-                            .into()
+                        container(
+                            image(icon_path.clone())
+                                .width(Length::Fixed(128.0))
+                                .height(Length::Fixed(128.0)),
+                        )
+                        .align_x(iced::alignment::Horizontal::Center)
+                        .into()
                     } else {
                         container(text("🎮").size(96))
                             .align_x(iced::alignment::Horizontal::Center)
@@ -497,13 +504,9 @@ impl MainWindow {
                     text(&game.title).size(16)
                 };
 
-                let content = column![
-                    icon,
-                    title_text,
-                    text(game.format_playtime()).size(12),
-                ]
-                .spacing(5)
-                .align_x(Alignment::Center);
+                let content = column![icon, title_text, text(game.format_playtime()).size(12),]
+                    .spacing(5)
+                    .align_x(Alignment::Center);
 
                 let banner_height = if self.config.smaller_banners {
                     215
@@ -542,13 +545,17 @@ impl MainWindow {
             .width(Length::Fill);
 
         // Get selected game status
-        let selected_status = self.selected_game_index
+        let selected_status = self
+            .selected_game_index
             .and_then(|index| self.games.get(index))
             .and_then(|game| self.launch_status.get(&game.title))
             .cloned()
             .unwrap_or(LaunchStatus::NotRunning);
 
-        let is_running = matches!(selected_status, LaunchStatus::Running(_) | LaunchStatus::Launching);
+        let is_running = matches!(
+            selected_status,
+            LaunchStatus::Running(_) | LaunchStatus::Launching
+        );
         let has_error = matches!(selected_status, LaunchStatus::Error(_));
 
         // Play/Kill button text
@@ -666,10 +673,6 @@ impl MainWindow {
 
 impl Default for MainWindow {
     fn default() -> Self {
-        Self::new(
-            AppConfig::default(),
-            I18n::default(),
-            Vec::new(),
-        )
+        Self::new(AppConfig::default(), I18n::default(), Vec::new())
     }
 }

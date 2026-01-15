@@ -32,7 +32,11 @@ impl ConfirmationDialog {
     }
 
     /// Create a delete confirmation dialog
-    pub fn delete_confirmation(game_title: String, on_confirm: Message, on_cancel: Message) -> Self {
+    pub fn delete_confirmation(
+        game_title: String,
+        on_confirm: Message,
+        on_cancel: Message,
+    ) -> Self {
         let message = format!(
             "{}: {}\n{}",
             crate::locale::i18n::I18n::default().t("Game"),
@@ -55,12 +59,7 @@ impl ConfirmationDialog {
         on_confirm: Message,
         on_cancel: Message,
     ) -> Self {
-        Self::new(
-            title.into(),
-            message.into(),
-            on_confirm,
-            on_cancel,
-        )
+        Self::new(title.into(), message.into(), on_confirm, on_cancel)
     }
 
     /// View the confirmation dialog

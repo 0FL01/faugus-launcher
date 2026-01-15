@@ -28,8 +28,7 @@ impl IconManager {
 
         // Create icons directory if it doesn't exist
         let icons_dir = Paths::icons_dir();
-        fs::create_dir_all(&icons_dir)
-            .context("Failed to create icons directory")?;
+        fs::create_dir_all(&icons_dir).context("Failed to create icons directory")?;
 
         // Output icon path
         let icon_path = icons_dir.join(format!("{}.png", game_id));
@@ -277,8 +276,7 @@ impl IconManager {
     pub fn delete_icon(game_id: &str) -> Result<()> {
         let icon_path = Self::get_icon_path(game_id);
         if icon_path.exists() {
-            fs::remove_file(&icon_path)
-                .context("Failed to remove icon")?;
+            fs::remove_file(&icon_path).context("Failed to remove icon")?;
             info!("Deleted icon: {:?}", icon_path);
         }
         Ok(())

@@ -34,8 +34,7 @@ impl DesktopEntry {
     /// Create a new desktop entry for a game
     pub fn for_game(game: &Game) -> Result<Self> {
         // Get faugus-run binary path
-        let faugus_run = Paths::faugus_run()
-            .context("faugus-run binary not found in PATH")?;
+        let faugus_run = Paths::faugus_run().context("faugus-run binary not found in PATH")?;
 
         // Build launch command
         let exec = Self::build_launch_command(game, &faugus_run);
@@ -130,7 +129,13 @@ impl DesktopEntry {
             .trim()
             .to_lowercase()
             .chars()
-            .map(|c| if c.is_alphanumeric() || c == '-' { c } else { '-' })
+            .map(|c| {
+                if c.is_alphanumeric() || c == '-' {
+                    c
+                } else {
+                    '-'
+                }
+            })
             .collect::<String>()
             .split('-')
             .filter(|s| !s.is_empty())
@@ -214,7 +219,10 @@ impl DesktopShortcutManager {
         let filename = entry.filename();
 
         // Create applications menu shortcut
-        if matches!(location, ShortcutLocation::Applications | ShortcutLocation::Both) {
+        if matches!(
+            location,
+            ShortcutLocation::Applications | ShortcutLocation::Both
+        ) {
             Self::create_applications_shortcut(&filename, &content)?;
         }
 
@@ -231,22 +239,19 @@ impl DesktopShortcutManager {
         let applications_dir = Paths::applications_dir();
 
         // Ensure directory exists
-        fs::create_dir_all(&applications_dir)
-            .context("Failed to create applications directory")?;
+        fs::create_dir_all(&applications_dir).context("Failed to create applications directory")?;
 
         let shortcut_path = applications_dir.join(filename);
 
         // Write desktop file
-        fs::write(&shortcut_path, content)
-            .context("Failed to write applications shortcut")?;
+        fs::write(&shortcut_path, content).context("Failed to write applications shortcut")?;
 
         // Make executable
         let mut perms = fs::metadata(&shortcut_path)
             .context("Failed to get shortcut permissions")?
             .permissions();
         perms.set_mode(0o755);
-        fs::set_permissions(&shortcut_path, perms)
-            .context("Failed to set shortcut permissions")?;
+        fs::set_permissions(&shortcut_path, perms).context("Failed to set shortcut permissions")?;
 
         info!("Created applications shortcut: {:?}", shortcut_path);
         Ok(())
@@ -257,22 +262,19 @@ impl DesktopShortcutManager {
         let desktop_dir = Paths::desktop_dir();
 
         // Ensure directory exists
-        fs::create_dir_all(&desktop_dir)
-            .context("Failed to create desktop directory")?;
+        fs::create_dir_all(&desktop_dir).context("Failed to create desktop directory")?;
 
         let shortcut_path = desktop_dir.join(filename);
 
         // Write desktop file
-        fs::write(&shortcut_path, content)
-            .context("Failed to write desktop shortcut")?;
+        fs::write(&shortcut_path, content).context("Failed to write desktop shortcut")?;
 
         // Make executable
         let mut perms = fs::metadata(&shortcut_path)
             .context("Failed to get shortcut permissions")?
             .permissions();
         perms.set_mode(0o755);
-        fs::set_permissions(&shortcut_path, perms)
-            .context("Failed to set shortcut permissions")?;
+        fs::set_permissions(&shortcut_path, perms).context("Failed to set shortcut permissions")?;
 
         info!("Created desktop shortcut: {:?}", shortcut_path);
         Ok(())
@@ -293,8 +295,7 @@ impl DesktopShortcutManager {
         // Remove from applications menu
         let app_shortcut = applications_dir.join(&filename);
         if app_shortcut.exists() {
-            fs::remove_file(&app_shortcut)
-                .context("Failed to remove applications shortcut")?;
+            fs::remove_file(&app_shortcut).context("Failed to remove applications shortcut")?;
             info!("Removed applications shortcut: {:?}", app_shortcut);
             removed = true;
         }
@@ -302,8 +303,7 @@ impl DesktopShortcutManager {
         // Remove from desktop
         let desktop_shortcut = desktop_dir.join(&filename);
         if desktop_shortcut.exists() {
-            fs::remove_file(&desktop_shortcut)
-                .context("Failed to remove desktop shortcut")?;
+            fs::remove_file(&desktop_shortcut).context("Failed to remove desktop shortcut")?;
             info!("Removed desktop shortcut: {:?}", desktop_shortcut);
             removed = true;
         }

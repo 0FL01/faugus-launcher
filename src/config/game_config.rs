@@ -119,8 +119,8 @@ impl Game {
         let content = fs::read_to_string(&games_path)
             .with_context(|| format!("Failed to read games file: {:?}", games_path))?;
 
-        let games: Vec<Self> = serde_json::from_str(&content)
-            .with_context(|| "Failed to parse games JSON")?;
+        let games: Vec<Self> =
+            serde_json::from_str(&content).with_context(|| "Failed to parse games JSON")?;
 
         Ok(games)
     }
@@ -135,8 +135,8 @@ impl Game {
                 .with_context(|| format!("Failed to create games directory: {:?}", parent))?;
         }
 
-        let content = serde_json::to_string_pretty(games)
-            .with_context(|| "Failed to serialize games")?;
+        let content =
+            serde_json::to_string_pretty(games).with_context(|| "Failed to serialize games")?;
 
         fs::write(&games_path, content)
             .with_context(|| format!("Failed to write games file: {:?}", games_path))?;
@@ -254,7 +254,9 @@ pub struct GameConfig {
 impl From<GameConfig> for Game {
     fn from(config: GameConfig) -> Self {
         Self {
-            gameid: config.gameid.unwrap_or_else(|| uuid::Uuid::new_v4().to_string()),
+            gameid: config
+                .gameid
+                .unwrap_or_else(|| uuid::Uuid::new_v4().to_string()),
             title: config.title,
             path: config.path,
             prefix: config.prefix,

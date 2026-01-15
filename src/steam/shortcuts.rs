@@ -101,7 +101,11 @@ impl SteamShortcuts {
 
     /// Save shortcuts to the Steam shortcuts.vdf file
     pub fn save(&self) -> Result<()> {
-        info!("Saving {} Steam shortcuts to: {:?}", self.shortcuts.len(), self.vdf_path);
+        info!(
+            "Saving {} Steam shortcuts to: {:?}",
+            self.shortcuts.len(),
+            self.vdf_path
+        );
 
         // Ensure parent directory exists
         if let Some(parent) = self.vdf_path.parent() {
@@ -158,8 +162,7 @@ impl SteamShortcuts {
         info!("Adding/updating Steam shortcut for: {}", game.title);
 
         // Get faugus-run path
-        let faugus_run = Paths::faugus_run()
-            .context("faugus-run binary not found in PATH")?;
+        let faugus_run = Paths::faugus_run().context("faugus-run binary not found in PATH")?;
 
         // Build icon path
         let icon = Paths::icons_dir().join(format!("{}.png", game.gameid));
@@ -205,25 +208,53 @@ impl SteamShortcuts {
             let appid = self.generate_appid();
 
             let mut shortcut = Map::new();
-            shortcut.insert("appid".to_string(), Value::Number(serde_json::Number::from(appid)));
+            shortcut.insert(
+                "appid".to_string(),
+                Value::Number(serde_json::Number::from(appid)),
+            );
             shortcut.insert("AppName".to_string(), Value::String(game.title.clone()));
             shortcut.insert("Exe".to_string(), Value::String(exe));
             shortcut.insert("StartDir".to_string(), Value::String(start_dir));
             shortcut.insert("icon".to_string(), Value::String(icon_str));
             shortcut.insert("ShortcutPath".to_string(), Value::String(String::new()));
             shortcut.insert("LaunchOptions".to_string(), Value::String(launch_options));
-            shortcut.insert("IsHidden".to_string(), Value::Number(serde_json::Number::from(0u32)));
-            shortcut.insert("AllowDesktopConfig".to_string(), Value::Number(serde_json::Number::from(1u32)));
-            shortcut.insert("AllowOverlay".to_string(), Value::Number(serde_json::Number::from(1u32)));
-            shortcut.insert("OpenVR".to_string(), Value::Number(serde_json::Number::from(0u32)));
-            shortcut.insert("Devkit".to_string(), Value::Number(serde_json::Number::from(0u32)));
+            shortcut.insert(
+                "IsHidden".to_string(),
+                Value::Number(serde_json::Number::from(0u32)),
+            );
+            shortcut.insert(
+                "AllowDesktopConfig".to_string(),
+                Value::Number(serde_json::Number::from(1u32)),
+            );
+            shortcut.insert(
+                "AllowOverlay".to_string(),
+                Value::Number(serde_json::Number::from(1u32)),
+            );
+            shortcut.insert(
+                "OpenVR".to_string(),
+                Value::Number(serde_json::Number::from(0u32)),
+            );
+            shortcut.insert(
+                "Devkit".to_string(),
+                Value::Number(serde_json::Number::from(0u32)),
+            );
             shortcut.insert("DevkitGameID".to_string(), Value::String(String::new()));
-            shortcut.insert("DevkitOverrideAppID".to_string(), Value::Number(serde_json::Number::from(0u32)));
-            shortcut.insert("LastPlayTime".to_string(), Value::Number(serde_json::Number::from(0u64)));
-            shortcut.insert("AutoCloseShortcut".to_string(), Value::Number(serde_json::Number::from(0u32)));
+            shortcut.insert(
+                "DevkitOverrideAppID".to_string(),
+                Value::Number(serde_json::Number::from(0u32)),
+            );
+            shortcut.insert(
+                "LastPlayTime".to_string(),
+                Value::Number(serde_json::Number::from(0u64)),
+            );
+            shortcut.insert(
+                "AutoCloseShortcut".to_string(),
+                Value::Number(serde_json::Number::from(0u32)),
+            );
             shortcut.insert("FlatpakAppID".to_string(), Value::String(String::new()));
 
-            self.shortcuts.insert(appid.to_string(), Value::Object(shortcut));
+            self.shortcuts
+                .insert(appid.to_string(), Value::Object(shortcut));
 
             Ok(false)
         }
@@ -267,65 +298,72 @@ impl SteamShortcuts {
     /// Convert Value to SteamShortcut
     fn value_to_shortcut(&self, obj: &Map<String, Value>) -> Result<SteamShortcut> {
         Ok(SteamShortcut {
-            appid: obj.get("appid")
-                .and_then(|v| v.as_u64())
-                .unwrap_or(0) as u32,
-            appname: obj.get("AppName")
+            appid: obj.get("appid").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
+            appname: obj
+                .get("AppName")
                 .and_then(|v| v.as_str())
                 .unwrap_or("")
                 .to_string(),
-            exe: obj.get("Exe")
+            exe: obj
+                .get("Exe")
                 .and_then(|v| v.as_str())
                 .unwrap_or("")
                 .to_string(),
-            start_dir: obj.get("StartDir")
+            start_dir: obj
+                .get("StartDir")
                 .and_then(|v| v.as_str())
                 .unwrap_or("")
                 .to_string(),
-            icon: obj.get("icon")
+            icon: obj
+                .get("icon")
                 .and_then(|v| v.as_str())
                 .unwrap_or("")
                 .to_string(),
-            shortcut_path: obj.get("ShortcutPath")
+            shortcut_path: obj
+                .get("ShortcutPath")
                 .and_then(|v| v.as_str())
                 .unwrap_or("")
                 .to_string(),
-            launch_options: obj.get("LaunchOptions")
+            launch_options: obj
+                .get("LaunchOptions")
                 .and_then(|v| v.as_str())
                 .unwrap_or("")
                 .to_string(),
-            is_hidden: obj.get("IsHidden")
+            is_hidden: obj.get("IsHidden").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
+            allow_desktop_config: obj
+                .get("AllowDesktopConfig")
                 .and_then(|v| v.as_u64())
                 .unwrap_or(0) as u32,
-            allow_desktop_config: obj.get("AllowDesktopConfig")
+            allow_overlay: obj
+                .get("AllowOverlay")
                 .and_then(|v| v.as_u64())
                 .unwrap_or(0) as u32,
-            allow_overlay: obj.get("AllowOverlay")
-                .and_then(|v| v.as_u64())
-                .unwrap_or(0) as u32,
-            open_vr: obj.get("OpenVR")
-                .and_then(|v| v.as_u64())
-                .unwrap_or(0) as u32,
-            devkit: obj.get("Devkit")
-                .and_then(|v| v.as_u64())
-                .unwrap_or(0) as u32,
-            devkit_game_id: obj.get("DevkitGameID")
+            open_vr: obj.get("OpenVR").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
+            devkit: obj.get("Devkit").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
+            devkit_game_id: obj
+                .get("DevkitGameID")
                 .and_then(|v| v.as_str())
                 .unwrap_or("")
                 .to_string(),
-            devkit_override_appid: obj.get("DevkitOverrideAppID")
+            devkit_override_appid: obj
+                .get("DevkitOverrideAppID")
                 .and_then(|v| v.as_u64())
                 .unwrap_or(0) as u32,
-            last_play_time: obj.get("LastPlayTime")
+            last_play_time: obj
+                .get("LastPlayTime")
                 .and_then(|v| v.as_u64())
                 .unwrap_or(0),
-            auto_close_shortcut: obj.get("AutoCloseShortcut")
+            auto_close_shortcut: obj
+                .get("AutoCloseShortcut")
                 .and_then(|v| v.as_u64())
                 .unwrap_or(0) as u32,
-            dip_treat_remote_desktop_as_sitting_in_front_of_monitor: obj.get("DipTreatRemoteDesktopAsSittingInFrontOfMonitor")
+            dip_treat_remote_desktop_as_sitting_in_front_of_monitor: obj
+                .get("DipTreatRemoteDesktopAsSittingInFrontOfMonitor")
                 .and_then(|v| v.as_u64())
-                .unwrap_or(0) as u32,
-            fandom_tags: obj.get("tags")
+                .unwrap_or(0)
+                as u32,
+            fandom_tags: obj
+                .get("tags")
                 .and_then(|v| v.as_array())
                 .map(|arr| {
                     arr.iter()

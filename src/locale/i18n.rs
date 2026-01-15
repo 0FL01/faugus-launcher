@@ -32,7 +32,10 @@ impl I18n {
         let locale_paths = vec![
             Self::get_locale_dir(format!("faugus-launcher-{}", language)),
             Self::get_locale_dir(format!("faugus-launcher_{}", language)),
-            Self::get_locale_dir(format!("locales/{}/LC_MESSAGES/faugus-launcher.mo", language)),
+            Self::get_locale_dir(format!(
+                "locales/{}/LC_MESSAGES/faugus-launcher.mo",
+                language
+            )),
         ];
 
         // For now, use built-in translations
@@ -105,7 +108,10 @@ impl I18n {
             ("Information", "Information"),
             ("Confirm", "Confirm"),
             ("Are you sure?", "Are you sure?"),
-            ("This action cannot be undone.", "This action cannot be undone."),
+            (
+                "This action cannot be undone.",
+                "This action cannot be undone.",
+            ),
             ("Game deleted successfully", "Game deleted successfully"),
             ("Game saved successfully", "Game saved successfully"),
             ("Failed to save game", "Failed to save game"),
@@ -154,8 +160,14 @@ impl I18n {
                 translations.insert("Duplicate".into(), "Duplicar".into());
                 translations.insert("Hide".into(), "Ocultar".into());
                 translations.insert("Show".into(), "Mostrar".into());
-                translations.insert("Open game location".into(), "Abrir ubicación del juego".into());
-                translations.insert("Open prefix location".into(), "Abrir ubicación del prefijo".into());
+                translations.insert(
+                    "Open game location".into(),
+                    "Abrir ubicación del juego".into(),
+                );
+                translations.insert(
+                    "Open prefix location".into(),
+                    "Abrir ubicación del prefijo".into(),
+                );
                 translations.insert("Show logs".into(), "Mostrar registros".into());
                 translations.insert("Close".into(), "Cerrar".into());
                 translations.insert("Cancel".into(), "Cancelar".into());
@@ -168,13 +180,34 @@ impl I18n {
                 translations.insert("Information".into(), "Información".into());
                 translations.insert("Confirm".into(), "Confirmar".into());
                 translations.insert("Are you sure?".into(), "¿Estás seguro?".into());
-                translations.insert("This action cannot be undone.".into(), "Esta acción no se puede deshacer.".into());
-                translations.insert("Game deleted successfully".into(), "Juego eliminado correctamente".into());
-                translations.insert("Game saved successfully".into(), "Juego guardado correctamente".into());
-                translations.insert("Failed to save game".into(), "Error al guardar el juego".into());
-                translations.insert("Failed to delete game".into(), "Error al eliminar el juego".into());
-                translations.insert("No game selected".into(), "Ningún juego seleccionado".into());
-                translations.insert("Please select a game first".into(), "Por favor, selecciona un juego primero".into());
+                translations.insert(
+                    "This action cannot be undone.".into(),
+                    "Esta acción no se puede deshacer.".into(),
+                );
+                translations.insert(
+                    "Game deleted successfully".into(),
+                    "Juego eliminado correctamente".into(),
+                );
+                translations.insert(
+                    "Game saved successfully".into(),
+                    "Juego guardado correctamente".into(),
+                );
+                translations.insert(
+                    "Failed to save game".into(),
+                    "Error al guardar el juego".into(),
+                );
+                translations.insert(
+                    "Failed to delete game".into(),
+                    "Error al eliminar el juego".into(),
+                );
+                translations.insert(
+                    "No game selected".into(),
+                    "Ningún juego seleccionado".into(),
+                );
+                translations.insert(
+                    "Please select a game first".into(),
+                    "Por favor, selecciona un juego primero".into(),
+                );
                 translations.insert("Search games...".into(), "Buscar juegos...".into());
                 translations.insert("Interface Mode".into(), "Modo de Interfaz".into());
                 translations.insert("List".into(), "Lista".into());
@@ -186,7 +219,10 @@ impl I18n {
                 translations.insert("System Tray".into(), "Bandeja del Sistema".into());
                 translations.insert("Start at Boot".into(), "Iniciar al Arrancar".into());
                 translations.insert("Start Maximized".into(), "Iniciar Maximizado".into());
-                translations.insert("Start Fullscreen".into(), "Iniciar en Pantalla Completa".into());
+                translations.insert(
+                    "Start Fullscreen".into(),
+                    "Iniciar en Pantalla Completa".into(),
+                );
                 translations.insert("Close on Launch".into(), "Cerrar al Lanzar".into());
                 translations.insert("Enable Logging".into(), "Habilitar Registro".into());
                 translations.insert("Show Hidden Games".into(), "Mostrar Juegos Ocultos".into());
@@ -210,8 +246,14 @@ impl I18n {
                 translations.insert("Duplicate".into(), "Dupliquer".into());
                 translations.insert("Hide".into(), "Masquer".into());
                 translations.insert("Show".into(), "Afficher".into());
-                translations.insert("Open game location".into(), "Ouvrir l'emplacement du jeu".into());
-                translations.insert("Open prefix location".into(), "Ouvrir l'emplacement du préfixe".into());
+                translations.insert(
+                    "Open game location".into(),
+                    "Ouvrir l'emplacement du jeu".into(),
+                );
+                translations.insert(
+                    "Open prefix location".into(),
+                    "Ouvrir l'emplacement du préfixe".into(),
+                );
                 translations.insert("Show logs".into(), "Afficher les journaux".into());
                 translations.insert("Close".into(), "Fermer".into());
                 translations.insert("Cancel".into(), "Annuler".into());
@@ -224,7 +266,10 @@ impl I18n {
                 translations.insert("Information".into(), "Information".into());
                 translations.insert("Confirm".into(), "Confirmer".into());
                 translations.insert("Are you sure?".into(), "Êtes-vous sûr?".into());
-                translations.insert("This action cannot be undone.".into(), "Cette action ne peut pas être annulée.".into());
+                translations.insert(
+                    "This action cannot be undone.".into(),
+                    "Cette action ne peut pas être annulée.".into(),
+                );
             }
             "de" => {
                 // German translations
@@ -246,7 +291,10 @@ impl I18n {
                 translations.insert("Hide".into(), "Ausblenden".into());
                 translations.insert("Show".into(), "Anzeigen".into());
                 translations.insert("Open game location".into(), "Spielstandort öffnen".into());
-                translations.insert("Open prefix location".into(), "Präfixstandort öffnen".into());
+                translations.insert(
+                    "Open prefix location".into(),
+                    "Präfixstandort öffnen".into(),
+                );
                 translations.insert("Show logs".into(), "Protokolle anzeigen".into());
                 translations.insert("Close".into(), "Schließen".into());
                 translations.insert("Cancel".into(), "Abbrechen".into());
@@ -259,7 +307,10 @@ impl I18n {
                 translations.insert("Information".into(), "Information".into());
                 translations.insert("Confirm".into(), "Bestätigen".into());
                 translations.insert("Are you sure?".into(), "Sind Sie sicher?".into());
-                translations.insert("This action cannot be undone.".into(), "Diese Aktion kann nicht rückgängig gemacht werden.".into());
+                translations.insert(
+                    "This action cannot be undone.".into(),
+                    "Diese Aktion kann nicht rückgängig gemacht werden.".into(),
+                );
             }
             "pt_BR" | "pt" => {
                 // Portuguese translations
@@ -280,8 +331,14 @@ impl I18n {
                 translations.insert("Duplicate".into(), "Duplicar".into());
                 translations.insert("Hide".into(), "Ocultar".into());
                 translations.insert("Show".into(), "Mostrar".into());
-                translations.insert("Open game location".into(), "Abrir localização do jogo".into());
-                translations.insert("Open prefix location".into(), "Abrir localização do prefixo".into());
+                translations.insert(
+                    "Open game location".into(),
+                    "Abrir localização do jogo".into(),
+                );
+                translations.insert(
+                    "Open prefix location".into(),
+                    "Abrir localização do prefixo".into(),
+                );
                 translations.insert("Show logs".into(), "Mostrar logs".into());
                 translations.insert("Close".into(), "Fechar".into());
                 translations.insert("Cancel".into(), "Cancelar".into());
@@ -294,7 +351,10 @@ impl I18n {
                 translations.insert("Information".into(), "Informação".into());
                 translations.insert("Confirm".into(), "Confirmar".into());
                 translations.insert("Are you sure?".into(), "Tem certeza?".into());
-                translations.insert("This action cannot be undone.".into(), "Esta ação não pode ser desfeita.".into());
+                translations.insert(
+                    "This action cannot be undone.".into(),
+                    "Esta ação não pode ser desfeita.".into(),
+                );
             }
             "ru" => {
                 // Russian translations
@@ -315,8 +375,14 @@ impl I18n {
                 translations.insert("Duplicate".into(), "Дублировать".into());
                 translations.insert("Hide".into(), "Скрыть".into());
                 translations.insert("Show".into(), "Показать".into());
-                translations.insert("Open game location".into(), "Открыть расположение игры".into());
-                translations.insert("Open prefix location".into(), "Открыть расположение префикса".into());
+                translations.insert(
+                    "Open game location".into(),
+                    "Открыть расположение игры".into(),
+                );
+                translations.insert(
+                    "Open prefix location".into(),
+                    "Открыть расположение префикса".into(),
+                );
                 translations.insert("Show logs".into(), "Показать журналы".into());
                 translations.insert("Close".into(), "Закрыть".into());
                 translations.insert("Cancel".into(), "Отмена".into());
@@ -329,7 +395,10 @@ impl I18n {
                 translations.insert("Information".into(), "Информация".into());
                 translations.insert("Confirm".into(), "Подтвердить".into());
                 translations.insert("Are you sure?".into(), "Вы уверены?".into());
-                translations.insert("This action cannot be undone.".into(), "Это действие нельзя отменить.".into());
+                translations.insert(
+                    "This action cannot be undone.".into(),
+                    "Это действие нельзя отменить.".into(),
+                );
             }
             "zh_CN" | "zh" => {
                 // Chinese translations
@@ -364,7 +433,10 @@ impl I18n {
                 translations.insert("Information".into(), "信息".into());
                 translations.insert("Confirm".into(), "确认".into());
                 translations.insert("Are you sure?".into(), "您确定吗？".into());
-                translations.insert("This action cannot be undone.".into(), "此操作无法撤销。".into());
+                translations.insert(
+                    "This action cannot be undone.".into(),
+                    "此操作无法撤销。".into(),
+                );
             }
             "sv" => {
                 // Swedish translations
@@ -404,13 +476,22 @@ impl I18n {
                 translations.insert("Information".into(), "Information".into());
                 translations.insert("Confirm".into(), "Bekräfta".into());
                 translations.insert("Are you sure?".into(), "Är du säker?".into());
-                translations.insert("This action cannot be undone.".into(), "Denna åtgärd kan inte ångras.".into());
+                translations.insert(
+                    "This action cannot be undone.".into(),
+                    "Denna åtgärd kan inte ångras.".into(),
+                );
                 translations.insert("Game deleted successfully".into(), "Spel borttaget".into());
                 translations.insert("Game saved successfully".into(), "Spel sparat".into());
                 translations.insert("Failed to save game".into(), "Kunde inte spara spel".into());
-                translations.insert("Failed to delete game".into(), "Kunde inte ta bort spel".into());
+                translations.insert(
+                    "Failed to delete game".into(),
+                    "Kunde inte ta bort spel".into(),
+                );
                 translations.insert("No game selected".into(), "Inget spel valt".into());
-                translations.insert("Please select a game first".into(), "Välj ett spel först".into());
+                translations.insert(
+                    "Please select a game first".into(),
+                    "Välj ett spel först".into(),
+                );
                 translations.insert("Search games...".into(), "Sök spel...".into());
                 translations.insert("Interface Mode".into(), "Gränssnittsläge".into());
                 translations.insert("List".into(), "Lista".into());
@@ -451,8 +532,14 @@ impl I18n {
                 translations.insert("Duplicate".into(), "Дублювати".into());
                 translations.insert("Hide".into(), "Сховати".into());
                 translations.insert("Show".into(), "Показати".into());
-                translations.insert("Open game location".into(), "Відкрити розташування гри".into());
-                translations.insert("Open prefix location".into(), "Відкрити розташування префікса".into());
+                translations.insert(
+                    "Open game location".into(),
+                    "Відкрити розташування гри".into(),
+                );
+                translations.insert(
+                    "Open prefix location".into(),
+                    "Відкрити розташування префікса".into(),
+                );
                 translations.insert("Show logs".into(), "Показати журнали".into());
                 translations.insert("Close".into(), "Закрити".into());
                 translations.insert("Cancel".into(), "Скасувати".into());
@@ -465,13 +552,31 @@ impl I18n {
                 translations.insert("Information".into(), "Інформація".into());
                 translations.insert("Confirm".into(), "Підтвердити".into());
                 translations.insert("Are you sure?".into(), "Ви впевнені?".into());
-                translations.insert("This action cannot be undone.".into(), "Цю дію неможливо скасувати.".into());
-                translations.insert("Game deleted successfully".into(), "Гру успішно видалено".into());
-                translations.insert("Game saved successfully".into(), "Гру успішно збережено".into());
-                translations.insert("Failed to save game".into(), "Не вдалося зберегти гру".into());
-                translations.insert("Failed to delete game".into(), "Не вдалося видалити гру".into());
+                translations.insert(
+                    "This action cannot be undone.".into(),
+                    "Цю дію неможливо скасувати.".into(),
+                );
+                translations.insert(
+                    "Game deleted successfully".into(),
+                    "Гру успішно видалено".into(),
+                );
+                translations.insert(
+                    "Game saved successfully".into(),
+                    "Гру успішно збережено".into(),
+                );
+                translations.insert(
+                    "Failed to save game".into(),
+                    "Не вдалося зберегти гру".into(),
+                );
+                translations.insert(
+                    "Failed to delete game".into(),
+                    "Не вдалося видалити гру".into(),
+                );
                 translations.insert("No game selected".into(), "Гру не вибрано".into());
-                translations.insert("Please select a game first".into(), "Будь ласка, спочатку виберіть гру".into());
+                translations.insert(
+                    "Please select a game first".into(),
+                    "Будь ласка, спочатку виберіть гру".into(),
+                );
                 translations.insert("Search games...".into(), "Пошук ігор...".into());
                 translations.insert("Interface Mode".into(), "Режим інтерфейсу".into());
                 translations.insert("List".into(), "Список".into());

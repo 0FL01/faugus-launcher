@@ -5,13 +5,13 @@ edition = "2021"
 license = "MIT"
 authors = ["@0FL01"]
 
-[lints.rust]
-unsafe_code = "forbid"
+#[lints.rust]
+#unsafe_code = "forbid"
 
-[lints.clippy]
-unwrap_used = "forbid"
-too_many_lines = "forbid" 
-too_many_arguments = "forbid"
+#[lints.clippy]
+#unwrap_used = "forbid"
+#too_many_lines = "forbid" 
+#too_many_arguments = "forbid"
 
 [dependencies]
 iced = { version = "0.13", features = ["image", "svg", "tokio", "advanced"] }

@@ -20,28 +20,14 @@ impl TrayMenu {
     pub fn new(i18n: &I18n) -> Result<Self> {
         let menu = Menu::new();
 
-        let show_item = menu.add_item(muda::MenuItem::with_id(
-            "show",
-            i18n.t("Show"),
-            true,
-            None,
-        )?;
+        let show_item = muda::MenuItem::with_id("show", i18n.t("Show"), true, None);
+        let hide_item = muda::MenuItem::with_id("hide", i18n.t("Hide"), true, None);
+        let quit_item = muda::MenuItem::with_id("quit", i18n.t("Quit"), true, None);
 
-        let hide_item = menu.add_item(muda::MenuItem::with_id(
-            "hide",
-            i18n.t("Hide"),
-            true,
-            None,
-        )?;
-
-        menu.add_native_item(muda::PredefinedMenuItem::separator())?;
-
-        let quit_item = menu.add_item(muda::MenuItem::with_id(
-            "quit",
-            i18n.t("Quit"),
-            true,
-            None,
-        )?;
+        menu.append(&show_item)?;
+        menu.append(&hide_item)?;
+        menu.append(&muda::PredefinedMenuItem::separator())?;
+        menu.append(&quit_item)?;
 
         info!("Tray menu created");
 

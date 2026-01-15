@@ -61,11 +61,14 @@ impl LogViewerDialog {
 
             for entry in entries.flatten() {
                 let path = entry.path();
-                if path.extension().map_or(false, |ext| ext == "log" || ext == "txt") {
+                if path
+                    .extension()
+                    .map_or(false, |ext| ext == "log" || ext == "txt")
+                {
                     if let Ok(metadata) = fs::metadata(&path) {
                         if let Ok(modified) = metadata.modified() {
-                            let is_more_recent = most_recent.as_ref()
-                                .map_or(true, |(_, m)| modified > *m);
+                            let is_more_recent =
+                                most_recent.as_ref().map_or(true, |(_, m)| modified > *m);
                             if is_more_recent {
                                 most_recent = Some((path, modified));
                             }
@@ -79,15 +82,20 @@ impl LogViewerDialog {
                 self.log_content = fs::read_to_string(&path)
                     .unwrap_or_else(|e| format!("Failed to read log file: {}", e));
             } else {
-                self.log_content = "No log files found. Logs will appear here once the application has been run.".to_string();
+                self.log_content =
+                    "No log files found. Logs will appear here once the application has been run."
+                        .to_string();
             }
         } else {
-            self.log_content = "Logs directory not found. Enable logging in Settings to create log files.".to_string();
+            self.log_content =
+                "Logs directory not found. Enable logging in Settings to create log files."
+                    .to_string();
         }
 
         // If log is empty, show a message
         if self.log_content.is_empty() && self.log_file_path.is_some() {
-            self.log_content = "Log file is empty. Logs will appear here as the application runs.".to_string();
+            self.log_content =
+                "Log file is empty. Logs will appear here as the application runs.".to_string();
         }
     }
 
@@ -131,15 +139,17 @@ impl LogViewerDialog {
     /// View the dialog
     pub fn view(&self, i18n: &I18n) -> Element<LogViewerMessage> {
         // Header with title
-        let header = container(
-            text(i18n.t("Application Logs")).size(20)
-        )
-        .padding(10)
-        .width(Length::Fill);
+        let header = container(text(i18n.t("Application Logs")).size(20))
+            .padding(10)
+            .width(Length::Fill);
 
         // File info
         let file_info = if let Some(path) = &self.log_file_path {
-            text(format!("File: {}", path.file_name().unwrap_or_default().to_string_lossy())).size(12)
+            text(format!(
+                "File: {}",
+                path.file_name().unwrap_or_default().to_string_lossy()
+            ))
+            .size(12)
         } else {
             text("No log file").size(12)
         };
@@ -166,9 +176,7 @@ impl LogViewerDialog {
 
     /// View log display section
     fn view_log_display(&self) -> Element<LogViewerMessage> {
-        let log_text = text(&self.log_content)
-            .size(11)
-            .width(Length::Fill);
+        let log_text = text(&self.log_content).size(11).width(Length::Fill);
 
         let scrollable_content = scrollable(log_text)
             .width(Length::Fill)
@@ -184,17 +192,14 @@ impl LogViewerDialog {
     /// View buttons section
     fn view_buttons(&self, i18n: &I18n) -> Element<LogViewerMessage> {
         row![
-            button(text(i18n.t("Refresh")).size(14))
-                .on_press(LogViewerMessage::Refresh),
+            button(text(i18n.t("Refresh")).size(14)).on_press(LogViewerMessage::Refresh),
             Space::with_width(Length::Fixed(10.0)),
-            button(text(i18n.t("Clear Logs")).size(14))
-                .on_press(LogViewerMessage::ClearLogs),
+            button(text(i18n.t("Clear Logs")).size(14)).on_press(LogViewerMessage::ClearLogs),
             Space::with_width(Length::Fixed(10.0)),
             button(text(i18n.t("Open Directory")).size(14))
                 .on_press(LogViewerMessage::OpenLogDirectory),
             Space::with_width(Length::Fill),
-            button(text(i18n.t("Close")).size(14))
-                .on_press(LogViewerMessage::Close),
+            button(text(i18n.t("Close")).size(14)).on_press(LogViewerMessage::Close),
         ]
         .spacing(5)
         .align_y(iced::alignment::Vertical::Center)

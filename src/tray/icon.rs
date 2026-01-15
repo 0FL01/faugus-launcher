@@ -39,10 +39,9 @@ impl TrayIcon {
     /// Find the default Faugus Launcher icon
     fn find_default_icon() -> Result<PathBuf> {
         // Try system icons first
-        if let Some(icon) = Paths::get_icon("faugus-launcher.png") {
-            if icon.exists() {
-                return Ok(icon);
-            }
+        let icon = Paths::get_icon("faugus-launcher.png");
+        if icon.exists() {
+            return Ok(icon);
         }
 
         // Try common installation paths
@@ -81,7 +80,6 @@ impl TrayIcon {
 
     /// Load icon as bytes (for tray-icon crate)
     pub fn load_icon_bytes(&self) -> Result<Vec<u8>> {
-        std::fs::read(&self.icon_path)
-            .context("Failed to read tray icon file")
+        std::fs::read(&self.icon_path).context("Failed to read tray icon file")
     }
 }

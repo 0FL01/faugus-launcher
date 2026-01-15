@@ -1,9 +1,7 @@
 // Settings Dialog
 // Configuration dialog for Faugus Launcher
 
-use iced::widget::{
-    button, checkbox, column, container, row, scrollable, text, text_input, Space,
-};
+use iced::widget::{button, checkbox, column, container, row, scrollable, text, text_input, Space};
 use iced::{Alignment, Element, Length, Task};
 use std::path::PathBuf;
 
@@ -98,7 +96,11 @@ impl SettingsDialog {
             .position(|(code, _)| code == &config.language)
             .unwrap_or(0);
 
-        let interface_modes = vec![InterfaceMode::List, InterfaceMode::Blocks, InterfaceMode::Banners];
+        let interface_modes = vec![
+            InterfaceMode::List,
+            InterfaceMode::Blocks,
+            InterfaceMode::Banners,
+        ];
         let interface_mode_index = interface_modes
             .iter()
             .position(|mode| mode == &config.interface_mode)
@@ -340,7 +342,9 @@ impl SettingsDialog {
                 Space::with_height(Length::Fixed(10.0)),
                 text(i18n.t("Some changes require a restart to take effect."))
                     .size(12)
-                    .style(iced::theme::Text::Color(iced::Color::new(1.0, 0.6, 0.0, 1.0))),
+                    .style(iced::theme::Text::Color(iced::Color::new(
+                        1.0, 0.6, 0.0, 1.0
+                    ))),
             ]
         } else {
             column![]
@@ -364,9 +368,13 @@ impl SettingsDialog {
         ])
         .width(Length::Fill);
 
-        column![scrollable, Space::with_height(Length::Fixed(10.0)), buttons_section]
-            .spacing(10)
-            .into()
+        column![
+            scrollable,
+            Space::with_height(Length::Fixed(10.0)),
+            buttons_section
+        ]
+        .spacing(10)
+        .into()
     }
 
     /// View general settings section
@@ -422,7 +430,11 @@ impl SettingsDialog {
     fn view_paths_section(&self, i18n: &I18n) -> Element<SettingsMessage> {
         let prefix_display = self.config.default_prefix.display().to_string();
         let lossless_display = self.config.lossless_location.display().to_string();
-        let runner_display = self.runners.get(self.runner_index).cloned().unwrap_or_default();
+        let runner_display = self
+            .runners
+            .get(self.runner_index)
+            .cloned()
+            .unwrap_or_default();
 
         column![
             text(i18n.t("Paths")).size(18),
@@ -432,8 +444,7 @@ impl SettingsDialog {
                 text(i18n.t("Default Prefix Location")).size(14),
                 Space::with_height(Length::Fixed(5.0)),
                 row![
-                    text_input("", &prefix_display)
-                        .on_input(SettingsMessage::DefaultPrefixChanged),
+                    text_input("", &prefix_display).on_input(SettingsMessage::DefaultPrefixChanged),
                     button("...")
                         .on_press(SettingsMessage::BrowseDefaultPrefix)
                         .width(Length::Fixed(50.0)),
@@ -478,10 +489,8 @@ impl SettingsDialog {
         column![
             text(i18n.t("Performance")).size(18),
             Space::with_height(Length::Fixed(10.0)),
-            checkbox("MangoHud", self.config.mangohud)
-                .on_toggle(SettingsMessage::MangoHudToggled),
-            checkbox("GameMode", self.config.gamemode)
-                .on_toggle(SettingsMessage::GameModeToggled),
+            checkbox("MangoHud", self.config.mangohud).on_toggle(SettingsMessage::MangoHudToggled),
+            checkbox("GameMode", self.config.gamemode).on_toggle(SettingsMessage::GameModeToggled),
             checkbox(i18n.t("Disable Hidraw"), self.config.disable_hidraw)
                 .on_toggle(SettingsMessage::DisableHidrawToggled),
             checkbox(i18n.t("Use discrete GPU"), self.config.discrete_gpu)
@@ -500,8 +509,11 @@ impl SettingsDialog {
                 .on_toggle(SettingsMessage::SystemTrayToggled),
             checkbox(i18n.t("Start on boot"), self.config.start_boot)
                 .on_toggle(SettingsMessage::StartBootToggled),
-            checkbox(i18n.t("Close when running a game/app"), self.config.close_on_launch)
-                .on_toggle(SettingsMessage::CloseOnLaunchToggled),
+            checkbox(
+                i18n.t("Close when running a game/app"),
+                self.config.close_on_launch
+            )
+            .on_toggle(SettingsMessage::CloseOnLaunchToggled),
             checkbox(i18n.t("Disable splash window"), self.config.splash_disable)
                 .on_toggle(SettingsMessage::SplashDisableToggled),
             checkbox(i18n.t("Enable logging"), self.config.enable_logging)
@@ -538,8 +550,7 @@ impl SettingsDialog {
                 Space::with_width(Length::Fixed(10.0)),
                 button(text("Winecfg").size(14)).on_press(SettingsMessage::WinecfgClicked),
                 Space::with_width(Length::Fixed(10.0)),
-                button(text("Winetricks").size(14))
-                    .on_press(SettingsMessage::WinetricksClicked),
+                button(text("Winetricks").size(14)).on_press(SettingsMessage::WinetricksClicked),
                 Space::with_width(Length::Fixed(10.0)),
                 button(text(i18n.t("Run")).size(14)).on_press(SettingsMessage::RunClicked),
             ]
@@ -555,11 +566,9 @@ impl SettingsDialog {
             text(i18n.t("Actions")).size(18),
             Space::with_height(Length::Fixed(10.0)),
             row![
-                button(text(i18n.t("Backup")).size(14))
-                    .on_press(SettingsMessage::BackupClicked),
+                button(text(i18n.t("Backup")).size(14)).on_press(SettingsMessage::BackupClicked),
                 Space::with_width(Length::Fixed(10.0)),
-                button(text(i18n.t("Restore")).size(14))
-                    .on_press(SettingsMessage::RestoreClicked),
+                button(text(i18n.t("Restore")).size(14)).on_press(SettingsMessage::RestoreClicked),
                 Space::with_width(Length::Fixed(10.0)),
                 button(text(i18n.t("Reset to Defaults")).size(14))
                     .on_press(SettingsMessage::ResetToDefaults),

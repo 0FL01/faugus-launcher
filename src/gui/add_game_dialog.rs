@@ -1,13 +1,11 @@
 // Add Game Dialog
 // Dialog for adding or editing games in Faugus Launcher
 
-use iced::widget::{
-    button, checkbox, column, container, row, scrollable, text, text_input, Space,
-};
+use iced::widget::{button, checkbox, column, container, row, scrollable, text, text_input, Space};
 use iced::{Alignment, Element, Length, Task};
 use std::path::PathBuf;
 
-use crate::config::{Game, AppConfig};
+use crate::config::{AppConfig, Game};
 use crate::locale::I18n;
 
 /// Messages for the Add Game dialog
@@ -223,7 +221,9 @@ impl AddGameDialog {
             AddGameMessage::TitleChanged(title) => {
                 self.game_title = title;
                 // Auto-update prefix based on title
-                if self.game_title.is_empty() || self.prefix == Self::default_prefix_for_game(&self.game_title) {
+                if self.game_title.is_empty()
+                    || self.prefix == Self::default_prefix_for_game(&self.game_title)
+                {
                     self.prefix = Self::default_prefix_for_game(&self.game_title);
                 }
                 self.error_message = None;
@@ -316,7 +316,13 @@ impl AddGameDialog {
             .trim()
             .to_lowercase()
             .chars()
-            .map(|c| if c.is_alphanumeric() || c == '-' { c } else { '-' })
+            .map(|c| {
+                if c.is_alphanumeric() || c == '-' {
+                    c
+                } else {
+                    '-'
+                }
+            })
             .collect::<String>()
             .split('-')
             .filter(|s| !s.is_empty())
@@ -325,7 +331,7 @@ impl AddGameDialog {
     }
 
     /// Validate the form
-    fn validate(&mut self) -> bool {
+    pub fn validate(&mut self) -> bool {
         // Check required fields
         if self.game_title.trim().is_empty() {
             self.error_message = Some("Title is required".to_string());
@@ -393,7 +399,10 @@ impl AddGameDialog {
         let addapp_bat = if !addapp.is_empty() {
             format!(
                 "{}/faugus-{}.bat",
-                self.game_path.parent().unwrap_or_else(|| std::path::Path::new("/")).display(),
+                self.game_path
+                    .parent()
+                    .unwrap_or_else(|| std::path::Path::new("/"))
+                    .display(),
                 Self::format_title(&self.game_title)
             )
         } else {
@@ -413,7 +422,11 @@ impl AddGameDialog {
             gamemode: self.gamemode,
             disable_hidraw: self.disable_hidraw,
             protonfix: self.protonfix.clone(),
-            runner: self.runners.get(self.runner_index).cloned().unwrap_or_default(),
+            runner: self
+                .runners
+                .get(self.runner_index)
+                .cloned()
+                .unwrap_or_default(),
             addapp_checkbox,
             addapp,
             addapp_bat,
@@ -424,7 +437,11 @@ impl AddGameDialog {
             lossless_performance: self.lossless_performance,
             lossless_hdr: self.lossless_hdr,
             playtime: self.editing_game.as_ref().map(|g| g.playtime).unwrap_or(0),
-            hidden: self.editing_game.as_ref().map(|g| g.hidden).unwrap_or(false),
+            hidden: self
+                .editing_game
+                .as_ref()
+                .map(|g| g.hidden)
+                .unwrap_or(false),
         }
     }
 
@@ -474,9 +491,13 @@ impl AddGameDialog {
         ])
         .width(Length::Fill);
 
-        column![scrollable, Space::with_height(Length::Fixed(10.0)), buttons_section]
-            .spacing(10)
-            .into()
+        column![
+            scrollable,
+            Space::with_height(Length::Fixed(10.0)),
+            buttons_section
+        ]
+        .spacing(10)
+        .into()
     }
 
     /// View the title section
@@ -538,7 +559,13 @@ impl AddGameDialog {
         column![
             text(i18n.t("Proton")).size(14),
             Space::with_height(Length::Fixed(5.0)),
-            text(self.runners.get(self.runner_index).cloned().unwrap_or_default()).size(16),
+            text(
+                self.runners
+                    .get(self.runner_index)
+                    .cloned()
+                    .unwrap_or_default()
+            )
+            .size(16),
             // TODO: Replace with actual dropdown/picker widget
         ]
         .spacing(5)
@@ -593,16 +620,12 @@ impl AddGameDialog {
         column![
             text(i18n.t("Options")).size(14),
             Space::with_height(Length::Fixed(5.0)),
-            checkbox("MangoHud", self.mangohud)
-                .on_toggle(AddGameMessage::MangoHudToggled),
-            checkbox("GameMode", self.gamemode)
-                .on_toggle(AddGameMessage::GameModeToggled),
+            checkbox("MangoHud", self.mangohud).on_toggle(AddGameMessage::MangoHudToggled),
+            checkbox("GameMode", self.gamemode).on_toggle(AddGameMessage::GameModeToggled),
             checkbox(i18n.t("Disable Hidraw"), self.disable_hidraw)
                 .on_toggle(AddGameMessage::DisableHidrawToggled),
-            row![
-                button(i18n.t("Lossless Scaling Frame Generation"))
-                    .on_press(AddGameMessage::LosslessClicked),
-            ]
+            row![button(i18n.t("Lossless Scaling Frame Generation"))
+                .on_press(AddGameMessage::LosslessClicked),]
             .padding(5),
         ]
         .spacing(5)
@@ -618,8 +641,7 @@ impl AddGameDialog {
                 .on_toggle(AddGameMessage::ShortcutDesktopToggled),
             checkbox(i18n.t("App Menu"), self.shortcut_appmenu)
                 .on_toggle(AddGameMessage::ShortcutAppMenuToggled),
-            checkbox("Steam", self.shortcut_steam)
-                .on_toggle(AddGameMessage::ShortcutSteamToggled),
+            checkbox("Steam", self.shortcut_steam).on_toggle(AddGameMessage::ShortcutSteamToggled),
         ]
         .spacing(5)
         .into()
@@ -631,7 +653,11 @@ impl AddGameDialog {
         let error = if let Some(ref error) = self.error_message {
             column![
                 Space::with_height(Length::Fixed(5.0)),
-                text(error).size(12).style(iced::theme::Text::Color(iced::Color::new(1.0, 0.0, 0.0, 1.0))),
+                text(error)
+                    .size(12)
+                    .style(iced::theme::Text::Color(iced::Color::new(
+                        1.0, 0.0, 0.0, 1.0
+                    ))),
             ]
         } else {
             column![]
@@ -667,11 +693,9 @@ impl AddGameDialog {
             checkbox(i18n.t("HDR Mode"), self.lossless_hdr),
             Space::with_height(Length::Fixed(20.0)),
             row![
-                button(text(i18n.t("Cancel")).size(14))
-                    .on_press(AddGameMessage::LosslessClicked),
+                button(text(i18n.t("Cancel")).size(14)).on_press(AddGameMessage::LosslessClicked),
                 Space::with_width(Length::Fixed(10.0)),
-                button(text(i18n.t("Ok")).size(14))
-                    .on_press(AddGameMessage::LosslessClicked),
+                button(text(i18n.t("Ok")).size(14)).on_press(AddGameMessage::LosslessClicked),
             ]
             .spacing(10),
         ]

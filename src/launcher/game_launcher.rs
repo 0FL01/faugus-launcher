@@ -12,7 +12,7 @@ use crate::config::paths::Paths;
 use crate::config::Game;
 
 /// Process information for running games
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct GameProcess {
     pub game_title: String,
     pub main_pid: u32,
@@ -84,7 +84,9 @@ impl GameLauncher {
                 return Ok(path);
             }
 
-            return Err(anyhow::anyhow!("umu-run not found. Please install UMU-Launcher."));
+            return Err(anyhow::anyhow!(
+                "umu-run not found. Please install UMU-Launcher."
+            ));
         }
 
         Ok(umu_run)
@@ -114,7 +116,10 @@ impl GameLauncher {
             if let Some(mangohud) = Paths::mangohud() {
                 info!("Enabling MangoHud");
                 cmd.env("MANGOHUD", "1");
-                cmd.env("MANGOHUD_CONFIG", "fps,frame_timing,cpu_stats,gpu_stats,ram,version");
+                cmd.env(
+                    "MANGOHUD_CONFIG",
+                    "fps,frame_timing,cpu_stats,gpu_stats,ram,version",
+                );
             }
         }
 
@@ -223,8 +228,8 @@ impl GameLauncher {
 
         #[cfg(unix)]
         {
-            use nix::unistd::Pid;
             use nix::sys::signal::{self, Signal};
+            use nix::unistd::Pid;
             signal::kill(Pid::from_raw(pid as i32), Signal::SIGTERM)
                 .with_context(|| format!("Failed to send SIGTERM to process {}", pid))?;
         }

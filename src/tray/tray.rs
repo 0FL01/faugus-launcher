@@ -3,8 +3,8 @@
 
 use anyhow::{Context, Result};
 use muda::Menu;
-use std::sync::mpsc;
 use std::path::PathBuf;
+use std::sync::mpsc;
 use tracing::{error, info, warn};
 
 use super::icon::TrayIcon;

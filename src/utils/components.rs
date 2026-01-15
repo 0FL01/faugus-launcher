@@ -15,7 +15,8 @@ use crate::config::paths::Paths;
 
 /// UMU Launcher URLs
 const UMU_VERSION_API: &str = "https://api.github.com/repos/Faugus/umu-launcher/releases";
-const UMU_URL_TEMPLATE: &str = "https://github.com/Faugus/umu-launcher/releases/download/{}/umu-run";
+const UMU_URL_TEMPLATE: &str =
+    "https://github.com/Faugus/umu-launcher/releases/download/{}/umu-run";
 
 /// Component manager
 pub struct ComponentManager {
@@ -75,7 +76,11 @@ impl ComponentManager {
     }
 
     /// Download and install UMU runner
-    pub async fn download_umu(&self, version: &str, on_progress: impl Fn(u64, u64)) -> Result<PathBuf> {
+    pub async fn download_umu(
+        &self,
+        version: &str,
+        on_progress: impl Fn(u64, u64),
+    ) -> Result<PathBuf> {
         info!("Downloading UMU runner version: {}", version);
 
         let url = UMU_URL_TEMPLATE.replace("{}", version);
@@ -167,8 +172,7 @@ impl ComponentManager {
     /// Install EAC component
     pub fn install_eac() -> Result<()> {
         let eac_dir = Self::eac_dir();
-        fs::create_dir_all(&eac_dir)
-            .context("Failed to create EAC directory")?;
+        fs::create_dir_all(&eac_dir).context("Failed to create EAC directory")?;
 
         // TODO: Download EAC components
         info!("EAC component directory created at: {:?}", eac_dir);
@@ -179,8 +183,7 @@ impl ComponentManager {
     /// Install BattlEye component
     pub fn install_be() -> Result<()> {
         let be_dir = Self::be_dir();
-        fs::create_dir_all(&be_dir)
-            .context("Failed to create BattlEye directory")?;
+        fs::create_dir_all(&be_dir).context("Failed to create BattlEye directory")?;
 
         // TODO: Download BattlEye components
         info!("BattlEye component directory created at: {:?}", be_dir);
