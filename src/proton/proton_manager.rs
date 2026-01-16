@@ -114,6 +114,32 @@ impl ProtonManager {
         Ok(versions)
     }
 
+    /// Get all available runners (placeholders + installed)
+    pub fn get_available_runners(&self) -> Vec<String> {
+        use crate::proton::runner_resolver::{
+            GE_PROTON_LATEST, PROTON_EM_LATEST, UMU_PROTON_LATEST,
+        };
+
+        let mut runners = vec![
+            UMU_PROTON_LATEST.to_string(),
+            GE_PROTON_LATEST.to_string(),
+            PROTON_EM_LATEST.to_string(),
+        ];
+
+        let mut installed = self.get_installed_versions();
+
+        // Add system Proton-CachyOS if exists
+        let cachy_path = PathBuf::from("/usr/share/steam/compatibilitytools.d/Proton-CachyOS");
+        if cachy_path.exists() && !installed.contains(&"Proton-CachyOS".to_string()) {
+            installed.push("Proton-CachyOS".to_string());
+        }
+
+        let sorted_installed = sort_versions_descending(installed);
+        runners.extend(sorted_installed);
+
+        runners
+    }
+
     /// Get installed Proton versions
     pub fn get_installed_versions(&self) -> Vec<String> {
         let mut versions = Vec::new();
@@ -125,14 +151,17 @@ impl ProtonManager {
         if let Ok(entries) = fs::read_dir(&self.compat_dir) {
             for entry in entries.flatten() {
                 if let Ok(name) = entry.file_name().into_string() {
-                    if name.starts_with("GE-Proton") || name.starts_with("Proton-") {
+                    if (name.starts_with("GE-Proton") || name.starts_with("Proton-"))
+                        && name != "UMU-Latest"
+                        && name != "LegacyRuntime"
+                        && !name.contains("Latest")
+                    {
                         versions.push(name);
                     }
                 }
             }
         }
 
-        versions.sort();
         versions
     }
 
@@ -260,6 +289,57 @@ fn format_size(bytes: u64) -> String {
     } else {
         format!("{} B", bytes)
     }
+}
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+enum VersionPart {
+    Number(u64),
+    String(String),
+}
+
+fn version_sort_key(v: &str) -> Vec<VersionPart> {
+    let mut parts = Vec::new();
+    let mut current_num = String::new();
+    let mut current_str = String::new();
+
+    for c in v.chars() {
+        if c.is_ascii_digit() {
+            if !current_str.is_empty() {
+                parts.push(VersionPart::String(current_str.clone()));
+                current_str.clear();
+            }
+            current_num.push(c);
+        } else {
+            if !current_num.is_empty() {
+                if let Ok(num) = current_num.parse::<u64>() {
+                    parts.push(VersionPart::Number(num));
+                }
+                current_num.clear();
+            }
+            current_str.push(c);
+        }
+    }
+
+    if !current_num.is_empty() {
+        if let Ok(num) = current_num.parse::<u64>() {
+            parts.push(VersionPart::Number(num));
+        }
+    }
+    if !current_str.is_empty() {
+        parts.push(VersionPart::String(current_str));
+    }
+
+    parts
+}
+
+/// Sort versions descending using numeric-aware sorting
+pub fn sort_versions_descending(mut versions: Vec<String>) -> Vec<String> {
+    versions.sort_by(|a, b| {
+        let key_a = version_sort_key(a);
+        let key_b = version_sort_key(b);
+        key_b.cmp(&key_a) // Descending
+    });
+    versions
 }
 
 #[cfg(test)]

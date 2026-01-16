@@ -31,6 +31,7 @@ pub struct MainWindow {
     launch_status: HashMap<String, LaunchStatus>,
     icon_cache: HashMap<String, PathBuf>,
     last_click: Option<(usize, std::time::Instant)>,
+    show_error_dialog: Option<String>,
 }
 
 impl MainWindow {
@@ -63,6 +64,7 @@ impl MainWindow {
             launch_status,
             icon_cache,
             last_click: None,
+            show_error_dialog: None,
         }
     }
 
@@ -325,7 +327,9 @@ impl MainWindow {
                     }
                     LaunchMessage::LaunchFailed(title, error) => {
                         info!("Game launch failed: {} - {}", title, error);
-                        self.update_launch_status(&title, LaunchStatus::Error(error));
+                        self.update_launch_status(&title, LaunchStatus::Error(error.clone()));
+                        self.show_error_dialog =
+                            Some(format!("Failed to launch {}: {}", title, error));
                     }
                     LaunchMessage::ProcessExited(title, _pid) => {
                         info!("Game process exited: {}", title);
@@ -343,6 +347,10 @@ impl MainWindow {
                 self.update_launch_status(&title, LaunchStatus::NotRunning);
                 Task::none()
             }
+            Message::CloseErrorDialog => {
+                self.show_error_dialog = None;
+                Task::none()
+            }
             _ => Task::none(),
         }
     }
@@ -355,11 +363,43 @@ impl MainWindow {
 
         let main_content = row![sidebar, content].spacing(10);
 
-        container(column![header, main_content].spacing(10))
+        let layout = container(column![header, main_content].spacing(10))
             .padding(20)
             .width(Length::Fill)
-            .height(Length::Fill)
+            .height(Length::Fill);
+
+        if let Some(error) = &self.show_error_dialog {
+            let error_modal = container(
+                column![
+                    text("Error").size(20),
+                    text(error),
+                    button(text("Close"))
+                        .on_press(Message::CloseErrorDialog)
+                        .padding(10)
+                ]
+                .spacing(20)
+                .align_x(Alignment::Center),
+            )
+            .width(Length::Fixed(400.0))
+            .padding(20)
+            .style(iced::widget::container::bordered_box);
+
+            iced::widget::stack![
+                layout,
+                container(error_modal)
+                    .width(Length::Fill)
+                    .height(Length::Fill)
+                    .center_x(Length::Fill)
+                    .center_y(Length::Fill)
+                    .style(|_theme| iced::widget::container::Style {
+                        background: Some(iced::Color::from_rgba(0.0, 0.0, 0.0, 0.5).into()),
+                        ..Default::default()
+                    })
+            ]
             .into()
+        } else {
+            layout.into()
+        }
     }
 
     /// View the header

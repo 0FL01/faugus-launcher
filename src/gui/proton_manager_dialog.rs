@@ -106,21 +106,24 @@ pub struct ProtonManagerDialog {
 
 impl ProtonManagerDialog {
     /// Create a new Proton Manager dialog
-    pub fn new() -> Self {
+    pub fn new() -> (Self, Task<ProtonManagerMessage>) {
         let manager = ProtonManager::new();
         let compat_dir = manager.compat_dir.clone();
 
-        Self {
-            manager,
-            selected_tab: 0,
-            releases: vec![Vec::new(), Vec::new()],
-            loading: false,
-            error_message: None,
-            progress_label: String::new(),
-            progress_value: 0.0,
-            show_progress: false,
-            compat_dir,
-        }
+        (
+            Self {
+                manager,
+                selected_tab: 0,
+                releases: vec![Vec::new(), Vec::new()],
+                loading: false,
+                error_message: None,
+                progress_label: String::new(),
+                progress_value: 0.0,
+                show_progress: false,
+                compat_dir,
+            },
+            Task::done(ProtonManagerMessage::FetchReleases),
+        )
     }
 
     /// Update the dialog state
@@ -495,6 +498,6 @@ fn format_size(bytes: u64) -> String {
 
 impl Default for ProtonManagerDialog {
     fn default() -> Self {
-        Self::new()
+        Self::new().0
     }
 }

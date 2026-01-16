@@ -10,6 +10,7 @@ use tracing::info;
 
 use crate::config::paths::Paths;
 use crate::config::Game;
+use crate::proton::runner_resolver;
 
 /// Process information for running games
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -35,7 +36,7 @@ impl GameLauncher {
         let mut cmd = AsyncCommand::new(&umu_run);
 
         // Set environment variables
-        Self::setup_environment(&mut cmd, game);
+        Self::setup_environment(&mut cmd, game)?;
 
         // Set up arguments
         let args = Self::build_arguments(game);
@@ -93,16 +94,13 @@ impl GameLauncher {
     }
 
     /// Set up environment variables for the game
-    fn setup_environment(cmd: &mut tokio::process::Command, game: &Game) {
+    fn setup_environment(cmd: &mut tokio::process::Command, game: &Game) -> Result<()> {
         // Wine prefix
         cmd.env("WINEPREFIX", &game.prefix);
 
         // Proton runner
-        let runner = if game.runner.is_empty() || game.runner == "UMU-Proton Latest" {
-            String::new()
-        } else {
-            game.runner.clone()
-        };
+        runner_resolver::validate_runner(&game.runner)?;
+        let runner = runner_resolver::resolve_runner(&game.runner)?;
 
         if !runner.is_empty() {
             cmd.env("PROTONPATH", &runner);
@@ -187,6 +185,8 @@ impl GameLauncher {
                 cmd.env("WINE_MONO_TRACE", "E:System.Windows.Forms");
             }
         }
+
+        Ok(())
     }
 
     /// Build command arguments

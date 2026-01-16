@@ -11,6 +11,7 @@ use std::path::PathBuf;
 use crate::config::{AppConfig, InterfaceMode};
 use crate::gui::file_picker;
 use crate::locale::I18n;
+use crate::proton::proton_manager::ProtonManager;
 
 /// Messages for the Settings dialog
 #[derive(Debug, Clone)]
@@ -125,7 +126,7 @@ impl SettingsDialog {
             .position(|mode| mode == &config.interface_mode)
             .unwrap_or(0);
 
-        let runners = Self::get_available_runners();
+        let runners = ProtonManager::new().get_available_runners();
         let runner_index = runners
             .iter()
             .position(|r| r == &config.default_runner)
@@ -216,15 +217,6 @@ impl SettingsDialog {
                 code: "zh_CN".to_string(),
                 name: "Chinese (Simplified)".to_string(),
             },
-        ]
-    }
-
-    /// Get available runners
-    fn get_available_runners() -> Vec<String> {
-        vec![
-            "UMU-Proton Latest".to_string(),
-            "GE-Proton Latest (default)".to_string(),
-            "Proton-GE Latest".to_string(),
         ]
     }
 

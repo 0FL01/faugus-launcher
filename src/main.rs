@@ -90,6 +90,7 @@ pub enum Message {
     CloseContextMenu,
     MouseMoved(Point),
     CloseDialog,
+    CloseErrorDialog,
     NoOp,
 }
 
@@ -201,9 +202,9 @@ impl FaugusLauncher {
                 Task::none()
             }
             Message::ShowProtonManagerDialog => {
-                let dialog = ProtonManagerDialog::new();
+                let (dialog, task) = ProtonManagerDialog::new();
                 self.dialog = DialogState::ProtonManager(Box::new(dialog));
-                Task::none()
+                task.map(Message::ProtonManagerDialog)
             }
             Message::ShowConfirmationDialog(dialog) => {
                 self.dialog = DialogState::Confirmation(dialog);

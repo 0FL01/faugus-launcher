@@ -11,6 +11,7 @@ use std::path::PathBuf;
 use crate::config::{AppConfig, Game};
 use crate::gui::file_picker;
 use crate::locale::I18n;
+use crate::proton::proton_manager::ProtonManager;
 
 /// Launcher types supported by Faugus Launcher
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -184,7 +185,7 @@ pub struct AddGameDialog {
 impl AddGameDialog {
     /// Create a new Add Game dialog (for adding a new game)
     pub fn new(config: &AppConfig, i18n: &I18n) -> Self {
-        let runners = Self::get_available_runners();
+        let runners = ProtonManager::new().get_available_runners();
         let default_runner_index = runners
             .iter()
             .position(|r| r == &config.default_runner)
@@ -251,7 +252,7 @@ impl AddGameDialog {
         dialog.banner_path = game.banner;
 
         // Load runner
-        let runners = Self::get_available_runners();
+        let runners = ProtonManager::new().get_available_runners();
         dialog.runners = runners;
         dialog.runner_index = dialog
             .runners
@@ -272,15 +273,6 @@ impl AddGameDialog {
         dialog.shortcut_steam = game.addapp.contains("steam");
 
         dialog
-    }
-
-    /// Get list of available Proton runners
-    fn get_available_runners() -> Vec<String> {
-        vec![
-            "UMU-Proton Latest".to_string(),
-            "GE-Proton Latest (default)".to_string(),
-            "Proton-GE Latest".to_string(),
-        ]
     }
 
     /// Update the dialog state
