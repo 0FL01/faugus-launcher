@@ -4,6 +4,7 @@
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+use std::process::Command;
 use sysinfo::{Pid, System};
 use tokio::process::Command as AsyncCommand;
 use tracing::info;
@@ -220,25 +221,67 @@ impl GameLauncher {
 
     /// Terminate a game process
     pub fn terminate(pid: u32) -> Result<()> {
-        info!("Terminating process: {}", pid);
+        info!("Terminating process tree: {}", pid);
+        Self::terminate_tree(pid);
+        Ok(())
+    }
 
+    /// Terminate a process tree recursively
+    pub fn terminate_tree(pid: u32) {
+        let mut sys = System::new();
+        sys.refresh_processes();
+        Self::terminate_tree_recursive(&mut sys, pid);
+    }
+
+    fn terminate_tree_recursive(sys: &mut System, pid: u32) {
+        let target_pid = Pid::from_u32(pid);
+
+        // Find children
+        let mut children = Vec::new();
+        for (p, proc) in sys.processes() {
+            if let Some(parent) = proc.parent() {
+                if parent == target_pid {
+                    children.push(p.as_u32());
+                }
+            }
+        }
+
+        // Kill children first
+        for child_pid in children {
+            Self::terminate_tree_recursive(sys, child_pid);
+        }
+
+        // Kill the parent
+        info!("Killing process: {}", pid);
         #[cfg(unix)]
         {
             use nix::sys::signal::{self, Signal};
-            use nix::unistd::Pid;
-            signal::kill(Pid::from_raw(pid as i32), Signal::SIGTERM)
-                .with_context(|| format!("Failed to send SIGTERM to process {}", pid))?;
+            use nix::unistd::Pid as NixPid;
+            let _ = signal::kill(NixPid::from_raw(pid as i32), Signal::SIGKILL);
         }
-
         #[cfg(windows)]
         {
-            Command::new("taskkill")
+            let _ = Command::new("taskkill")
                 .args(["/PID", &pid.to_string(), "/F"])
-                .output()
-                .with_context(|| format!("Failed to kill process {}", pid))?;
+                .output();
         }
+    }
 
-        Ok(())
+    /// Kill all common Wine processes
+    pub fn kill_all_wine_processes() {
+        info!("Killing all common Wine processes");
+        let wine_binaries = [
+            "wineserver",
+            "wine64-preloader",
+            "winedevice.exe",
+            "plugplay.exe",
+            "services.exe",
+            "explorer.exe",
+        ];
+
+        for bin in wine_binaries {
+            let _ = Command::new("pkill").args(["-9", bin]).output();
+        }
     }
 
     /// Get game process by title

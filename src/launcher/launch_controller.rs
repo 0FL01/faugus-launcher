@@ -141,6 +141,9 @@ impl GameLaunchController {
         for (title, _) in running {
             let _ = self.terminate_game(&title);
         }
+
+        // Force kill any remaining wine processes
+        GameLauncher::kill_all_wine_processes();
     }
 
     /// Update game status (call when process exits)
