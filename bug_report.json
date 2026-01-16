@@ -1,50 +1,119 @@
 {
   "bug_report": {
-    "title": "Отчёт о багах GUI: Rust-версия Faugus Launcher",
-    "date": "2026-01-15",
-    "status": "Критический (Приложение невозможно полноценно использовать)",
-    "summary": "Основные проблемы связаны с ошибками верстки (layout) в Iced, из-за которых критические кнопки управления в диалогах оказываются за пределами экрана, а также отсутствием ключевого функционала, присутствующего в Python-версии.",
+    "title": "Критические баги GUI: отсутствие кнопок управления в модальных окнах",
+    "version": "0.0.1",
+    "date": "2026-01-16",
+    "reported_by": "Automated Code Analysis",
+    "severity": "CRITICAL - Приложением невозможно пользоваться",
+    "summary": "В Rust-версии Faugus Launcher (Iced GUI) критические кнопки управления в модальных диалогах полностью обрезаны и недоступны пользователю. Проблема делает приложение фактически неработоспособным.",
+    "screenshots_evidence": {
+      "add_game_dialog": {
+        "file": "uploaded_image_0_1768512205364.png",
+        "description": "Диалог добавления игры (Add Game) - кнопки Cancel/Ok полностью обрезаны внизу окна"
+      },
+      "add_game_dialog_scrolled": {
+        "file": "uploaded_image_1_1768512205364.png",
+        "description": "Нижняя часть диалога при прокрутке - видны секции Options, Tools, Shortcut, но кнопки управления всё равно недоступны"
+      },
+      "settings_dialog": {
+        "file": "uploaded_image_3_1768512205364.png",
+        "description": "Диалог настроек (Settings) - кнопки Cancel/Apply полностью отсутствуют в нижней части"
+      }
+    },
     "critical_bugs": [
       {
-        "id": "DIALOG_LAYOUT_HIDDEN_BUTTONS",
-        "description": "Кнопки 'Ок', 'Apply' и 'Cancel' во всех диалогах (Add Game, Settings) невидимы или обрезаны.",
-        "root_cause": "В src/main.rs диалоги отображаются через 'column![backdrop, container(dialog_view)]', где обе части имеют высоту 'Fill'. Это заставляет диалог начинаться строго с середины экрана и уходить вниз за границы окна. Внутренние кнопки диалогов внизу становятся недоступны.",
-        "affected_files": ["src/main.rs", "src/gui/add_game_dialog.rs", "src/gui/settings_dialog.rs"]
+        "id": "BUG-001",
+        "title": "Кнопки Cancel/Ok в диалоге Add Game обрезаны",
+        "severity": "CRITICAL",
+        "description": "В диалоге добавления/редактирования игры кнопки 'Cancel' и 'Ok' (строки 838-844 в add_game_dialog.rs) полностью невидимы и недоступны пользователю.",
+        "user_impact": "Невозможно сохранить игру или закрыть диалог нормальным способом (только ESC или клик вне окна)",
+        "code_analysis": {
+          "buttons_defined_in": "src/gui/add_game_dialog.rs:view_buttons() (строки 815-851)",
+          "button_code": "button(text(i18n.t('Cancel'))).on_press(AddGameMessage::Cancel) и button(text(i18n.t('Ok'))).on_press(AddGameMessage::Confirm)",
+          "problem_location": "src/main.rs:671-753 - рендеринг модальных окон",
+          "root_cause": "Диалог помещён в container с фиксированной шириной 600px, но без ограничения высоты. При этом scrollable внутри диалога занимает всё доступное пространство (view_main_dialog, строки 557-604), а кнопки (buttons_section) добавляются ПОСЛЕ scrollable. Когда контент scrollable превышает высоту контейнера, кнопки выталкиваются за пределы видимой области."
+        },
+        "affected_files": [
+          "src/gui/add_game_dialog.rs",
+          "src/main.rs"
+        ]
       },
       {
-        "id": "CONFIRMATION_DIALOG_MISALIGNMENT",
-        "description": "Диалог подтверждения удаления смещен вправо.",
-        "root_cause": "В src/gui/confirmation_dialog.rs используется 'row![background, dialog]', где фон занимает всю левую часть, толкая само окно в правый угол.",
-        "affected_files": ["src/gui/confirmation_dialog.rs"]
+        "id": "BUG-002",
+        "title": "Кнопки Cancel/Apply в диалоге Settings обрезаны",
+        "severity": "CRITICAL",
+        "description": "Аналогичная проблема в диалоге настроек - кнопки 'Cancel' и 'Apply' (строки 669-683 в settings_dialog.rs) полностью обрезаны.",
+        "user_impact": "Невозможно сохранить настройки или закрыть диалог нормальным способом",
+        "code_analysis": {
+          "buttons_defined_in": "src/gui/settings_dialog.rs:view_buttons() (строки 669-683)",
+          "button_code": "button(text(i18n.t('Cancel'))).on_press(SettingsMessage::Cancel) и button(text(i18n.t('Apply'))).on_press(SettingsMessage::Confirm)",
+          "problem_location": "src/main.rs:709-717 - контейнер фиксированной ширины 700px",
+          "root_cause": "Та же проблема что и в BUG-001: scrollable занимает всё пространство, buttons_section добавляется после и выходит за границы."
+        },
+        "affected_files": [
+          "src/gui/settings_dialog.rs",
+          "src/main.rs"
+        ]
+      },
+      {
+        "id": "BUG-003",
+        "title": "Модальные окна не имеют кнопки закрытия (X)",
+        "severity": "HIGH",
+        "description": "В отличие от Python-версии (GTK3), модальные диалоги в Rust-версии не имеют стандартной кнопки закрытия в заголовке окна, что усугубляет проблему с обрезанными кнопками.",
+        "user_impact": "При отсутствии видимых кнопок Cancel/Ok единственный способ закрыть диалог - нажать ESC или кликнуть на затемнённую область (если это реализовано)",
+        "code_analysis": {
+          "current_modal_implementation": "src/main.rs:742-752 - модальное окно создаётся как container с полупрозрачным фоном",
+          "missing_feature": "Отсутствует обработка клика по фону для закрытия (on_press не добавлен к modal container)"
+        },
+        "affected_files": [
+          "src/main.rs"
+        ]
       }
     ],
-    "missing_critical_features": [
+    "root_cause_analysis": {
+      "technical_explanation": "Проблема возникает из-за неправильной работы с Layout в Iced. В view диалогов используется паттерн: column![scrollable(...), buttons]. При этом scrollable имеет высоту Fill, а buttons - фиксированную. Когда контент scrollable превышает доступное пространство, кнопки выталкиваются за видимую область. В main.rs диалог помещается в container с фиксированной шириной, но height: Fill, что не ограничивает общую высоту содержимого.",
+      "comparison_with_python": {
+        "python_version": "GTK3 использует GtkScrolledWindow с явными размерами и GtkBox для кнопок, которые ВСЕГДА остаются видимыми внизу окна",
+        "rust_version": "Iced column![] не имеет встроенного механизма 'sticky footer' для кнопок"
+      }
+    },
+    "suggested_fixes": [
       {
-        "feature": "Контекстное меню (ПКМ)",
-        "description": "В Rust-версии отсутствует меню при клике правой кнопкой мыши на игру. В Python-версии через него доступны: 'Open game location', 'Open prefix location', 'Show logs'. Без этого отладка неработающих игр крайне затруднена."
+        "fix_id": "FIX-001",
+        "description": "Ограничить высоту scrollable, оставив место для кнопок",
+        "implementation": "Использовать Length::FillPortion для scrollable и Length::Shrink для buttons, или задать максимальную высоту scrollable"
       },
       {
-        "feature": "Кнопка 'Kill All'",
-        "description": "Отсутствует глобальная кнопка принудительного закрытия всех игр (есть в Python-версии). В Rust-версии есть только 'Stop' для выбранной игры."
+        "fix_id": "FIX-002",
+        "description": "Задать фиксированную высоту контейнера диалога в main.rs",
+        "implementation": "Заменить .height(Length::Fill) на .height(Length::Fixed(600.0)) или динамически вычислять высоту"
       },
       {
-        "feature": "Интеграция Winetricks/Winecfg",
-        "description": "Кнопки в настройках добавлены визуально, но не имеют реализации (в коде помечены как TODO)."
+        "fix_id": "FIX-003",
+        "description": "Переместить кнопки внутрь scrollable как последний элемент",
+        "implementation": "Добавить buttons_section в конец scrollable вместо отдельного элемента column"
       },
       {
-        "feature": "Управление баннерами",
-        "description": "В Rust-версии нет функционала выбора или загрузки баннеров для игр, что делает режимы просмотра 'Blocks' и 'Banners' малополезными по сравнению с Python-версией."
+        "fix_id": "FIX-004",
+        "description": "Добавить обработку клика по фону модального окна",
+        "implementation": "Обернуть modal container в mouse_area с on_press для закрытия диалога"
       }
     ],
     "reproduction_steps": [
-      "1. Запустить Rust-версию (cargo run).",
-      "2. Нажать 'Add' или 'Settings'.",
-      "3. Попробовать найти кнопку сохранения ('Ok'/'Apply') в нижней части диалога (она будет отсутствовать из-за обрезки)."
+      "1. Запустить Rust-версию: cargo run",
+      "2. Нажать кнопку 'Add' в левой панели",
+      "3. Появится диалог добавления игры",
+      "4. Попытаться найти кнопки 'Cancel' или 'Ok' в нижней части диалога",
+      "5. Кнопки отсутствуют - они скрыты за нижней границей окна",
+      "6. Повторить для кнопки 'Settings' - та же проблема с кнопками Cancel/Apply"
     ],
-    "recommendations": [
-      "Исправить рендеринг модальных окон в src/main.rs, используя центрирование контейнера вместо разделения экрана 50/50.",
-      "Реализовать обработку событий правой кнопки мыши в main_window.rs для вызова контекстного меню.",
-      "Добавить реализацию для кнопок Winetricks/Winecfg, используя std::process::Command."
-    ]
+    "environment": {
+      "os": "Linux",
+      "rust_version": "Cargo.toml указывает edition 2021",
+      "iced_version": "0.13 (согласно AGENTS.md)",
+      "application_version": "0.0.1"
+    },
+    "priority": "P0 - Блокирующий баг",
+    "status": "Open"
   }
 }
