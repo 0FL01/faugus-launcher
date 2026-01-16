@@ -81,21 +81,6 @@ faugus-launcher/
 - **Сборка**: Meson + Ninja.
 - **Зависимости**: `psutil`, `requests`, `vdf`, `AyatanaAppIndicator3`.
 
-## Сборка и Запуск
-
-### Rust
-```bash
-# Запуск в режиме разработки
-cargo run
-
-# Сборка релизной версии
-cargo build --release
-
-# Проверка кода
-cargo check
-cargo clippy
-```
-
 ### Python
 ```bash
 meson setup build

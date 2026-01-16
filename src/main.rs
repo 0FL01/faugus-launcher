@@ -262,14 +262,51 @@ impl FaugusLauncher {
                 Task::none()
             }
             Message::GameRightClicked(index) => {
-                let menu = ContextMenu::new(index, self.mouse_position);
-                self.dialog = DialogState::ContextMenu(Box::new(menu));
+                if let Some(game) = self.main_window.games().get(index) {
+                    let menu = ContextMenu::new(
+                        index,
+                        self.mouse_position,
+                        game.title.clone(),
+                        game.format_playtime(),
+                        game.hidden,
+                    );
+                    self.dialog = DialogState::ContextMenu(Box::new(menu));
+                }
                 Task::none()
             }
             Message::ContextMenu(msg) => {
                 if let DialogState::ContextMenu(menu) = &self.dialog {
                     let game_index = menu.game_index;
+                    self.dialog = DialogState::None;
+
                     match msg {
+                        ContextMenuMessage::Play => {
+                            return Task::done(Message::GameDoubleClicked(game_index));
+                        }
+                        ContextMenuMessage::Edit => {
+                            return Task::done(Message::ShowEditGameDialog(game_index));
+                        }
+                        ContextMenuMessage::Delete => {
+                            // Ensure game is selected before triggering delete
+                            let _ = self
+                                .main_window
+                                .update(Message::GameSelected(Some(game_index)));
+                            return Task::done(Message::DeleteClicked);
+                        }
+                        ContextMenuMessage::Duplicate => {
+                            // Ensure game is selected before triggering duplicate
+                            let _ = self
+                                .main_window
+                                .update(Message::GameSelected(Some(game_index)));
+                            return Task::done(Message::DuplicateClicked);
+                        }
+                        ContextMenuMessage::ToggleHidden => {
+                            // Ensure game is selected before triggering toggle hidden
+                            let _ = self
+                                .main_window
+                                .update(Message::GameSelected(Some(game_index)));
+                            return Task::done(Message::HideShowClicked);
+                        }
                         ContextMenuMessage::OpenLocation => {
                             if let Some(game) = self.main_window.games().get(game_index) {
                                 let path = std::path::Path::new(&game.path);
@@ -277,16 +314,13 @@ impl FaugusLauncher {
                                     let _ = open::that(parent);
                                 }
                             }
-                            self.dialog = DialogState::None;
                         }
                         ContextMenuMessage::OpenPrefix => {
                             if let Some(game) = self.main_window.games().get(game_index) {
                                 let _ = open::that(&game.prefix);
                             }
-                            self.dialog = DialogState::None;
                         }
                         ContextMenuMessage::ShowLogs => {
-                            self.dialog = DialogState::None;
                             return Task::done(Message::ShowLogViewerDialog);
                         }
                     }

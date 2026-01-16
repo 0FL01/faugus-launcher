@@ -1333,6 +1333,7 @@ dependencies = [
  "serde_json",
  "sysinfo",
  "tar",
+ "thiserror 2.0.17",
  "tokio",
  "tracing",
  "tracing-subscriber",

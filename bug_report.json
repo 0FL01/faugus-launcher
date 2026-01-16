@@ -1,119 +1,183 @@
 {
-  "bug_report": {
-    "title": "Критические баги GUI: отсутствие кнопок управления в модальных окнах",
-    "version": "0.0.1",
-    "date": "2026-01-16",
-    "reported_by": "Automated Code Analysis",
-    "severity": "CRITICAL - Приложением невозможно пользоваться",
-    "summary": "В Rust-версии Faugus Launcher (Iced GUI) критические кнопки управления в модальных диалогах полностью обрезаны и недоступны пользователю. Проблема делает приложение фактически неработоспособным.",
-    "screenshots_evidence": {
-      "add_game_dialog": {
-        "file": "uploaded_image_0_1768512205364.png",
-        "description": "Диалог добавления игры (Add Game) - кнопки Cancel/Ok полностью обрезаны внизу окна"
-      },
-      "add_game_dialog_scrolled": {
-        "file": "uploaded_image_1_1768512205364.png",
-        "description": "Нижняя часть диалога при прокрутке - видны секции Options, Tools, Shortcut, но кнопки управления всё равно недоступны"
-      },
-      "settings_dialog": {
-        "file": "uploaded_image_3_1768512205364.png",
-        "description": "Диалог настроек (Settings) - кнопки Cancel/Apply полностью отсутствуют в нижней части"
-      }
-    },
-    "critical_bugs": [
-      {
-        "id": "BUG-001",
-        "title": "Кнопки Cancel/Ok в диалоге Add Game обрезаны",
-        "severity": "CRITICAL",
-        "description": "В диалоге добавления/редактирования игры кнопки 'Cancel' и 'Ok' (строки 838-844 в add_game_dialog.rs) полностью невидимы и недоступны пользователю.",
-        "user_impact": "Невозможно сохранить игру или закрыть диалог нормальным способом (только ESC или клик вне окна)",
-        "code_analysis": {
-          "buttons_defined_in": "src/gui/add_game_dialog.rs:view_buttons() (строки 815-851)",
-          "button_code": "button(text(i18n.t('Cancel'))).on_press(AddGameMessage::Cancel) и button(text(i18n.t('Ok'))).on_press(AddGameMessage::Confirm)",
-          "problem_location": "src/main.rs:671-753 - рендеринг модальных окон",
-          "root_cause": "Диалог помещён в container с фиксированной шириной 600px, но без ограничения высоты. При этом scrollable внутри диалога занимает всё доступное пространство (view_main_dialog, строки 557-604), а кнопки (buttons_section) добавляются ПОСЛЕ scrollable. Когда контент scrollable превышает высоту контейнера, кнопки выталкиваются за пределы видимой области."
+    "bug_report": {
+        "id": "FAUGUS-RS-001",
+        "title": "Неполное контекстное меню для добавленной игры",
+        "severity": "high",
+        "priority": "P1",
+        "created_at": "2026-01-16T09:38:00+03:00",
+        "version": "0.0.1",
+        "component": "gui/context_menu",
+        "status": "open",
+        "reporter": "user",
+        "summary": "Контекстное меню при правом клике на игру в Rust версии содержит только 3 пункта вместо 10 пунктов, как в Python версии.",
+        "description": {
+            "problem": "При правом клике на добавленную игру в Rust версии отображается урезанное контекстное меню с минимальным функционалом.",
+            "expected_behavior": "Контекстное меню должно содержать все опции, как в Python версии: Title, Playtime, Play, Edit, Delete, Duplicate, Hide/Show, Open game location, Open prefix location, Show logs",
+            "actual_behavior": "Контекстное меню содержит только 3 пункта: 'Open game location', 'Open prefix location', 'Show logs'"
         },
         "affected_files": [
-          "src/gui/add_game_dialog.rs",
-          "src/main.rs"
-        ]
-      },
-      {
-        "id": "BUG-002",
-        "title": "Кнопки Cancel/Apply в диалоге Settings обрезаны",
-        "severity": "CRITICAL",
-        "description": "Аналогичная проблема в диалоге настроек - кнопки 'Cancel' и 'Apply' (строки 669-683 в settings_dialog.rs) полностью обрезаны.",
-        "user_impact": "Невозможно сохранить настройки или закрыть диалог нормальным способом",
-        "code_analysis": {
-          "buttons_defined_in": "src/gui/settings_dialog.rs:view_buttons() (строки 669-683)",
-          "button_code": "button(text(i18n.t('Cancel'))).on_press(SettingsMessage::Cancel) и button(text(i18n.t('Apply'))).on_press(SettingsMessage::Confirm)",
-          "problem_location": "src/main.rs:709-717 - контейнер фиксированной ширины 700px",
-          "root_cause": "Та же проблема что и в BUG-001: scrollable занимает всё пространство, buttons_section добавляется после и выходит за границы."
+            {
+                "path": "src/gui/context_menu.rs",
+                "issue": "Определение ContextMenuMessage содержит только 3 варианта вместо 8",
+                "line_range": "5-10"
+            },
+            {
+                "path": "src/gui/context_menu.rs",
+                "issue": "Метод view() отрисовывает только 3 кнопки вместо полного набора",
+                "line_range": "26-51"
+            },
+            {
+                "path": "src/main.rs",
+                "issue": "Обработчик ContextMenu(msg) не обрабатывает отсутствующие сообщения",
+                "line_range": "269-295"
+            }
+        ],
+        "comparison": {
+            "python_version": {
+                "file": "faugus_launcher.py",
+                "context_menu_items": [
+                    {
+                        "name": "menu_item_title",
+                        "description": "Заголовок с названием игры",
+                        "line": 236
+                    },
+                    {
+                        "name": "menu_item_playtime",
+                        "description": "Время игры",
+                        "line": 240
+                    },
+                    {
+                        "name": "menu_item_play",
+                        "description": "Запустить игру",
+                        "line": 246
+                    },
+                    {
+                        "name": "menu_item_edit",
+                        "description": "Редактировать игру",
+                        "line": 250
+                    },
+                    {
+                        "name": "menu_item_delete",
+                        "description": "Удалить игру",
+                        "line": 254
+                    },
+                    {
+                        "name": "menu_item_duplicate",
+                        "description": "Дублировать игру",
+                        "line": 258
+                    },
+                    {
+                        "name": "menu_item_hide",
+                        "description": "Скрыть/Показать игру",
+                        "line": 262
+                    },
+                    {
+                        "name": "menu_item_game",
+                        "description": "Открыть папку игры",
+                        "line": 266
+                    },
+                    {
+                        "name": "menu_item_prefix",
+                        "description": "Открыть папку префикса",
+                        "line": 270
+                    },
+                    {
+                        "name": "menu_show_logs",
+                        "description": "Показать логи",
+                        "line": 274
+                    }
+                ],
+                "total_items": 10
+            },
+            "rust_version": {
+                "file": "src/gui/context_menu.rs",
+                "context_menu_items": [
+                    {
+                        "name": "OpenLocation",
+                        "description": "Открыть папку игры",
+                        "line": 7
+                    },
+                    {
+                        "name": "OpenPrefix",
+                        "description": "Открыть папку префикса",
+                        "line": 8
+                    },
+                    {
+                        "name": "ShowLogs",
+                        "description": "Показать логи",
+                        "line": 9
+                    }
+                ],
+                "total_items": 3
+            },
+            "missing_items": [
+                "Title (название игры в меню)",
+                "Playtime (время игры)",
+                "Play (запустить игру)",
+                "Edit (редактировать игру)",
+                "Delete (удалить игру)",
+                "Duplicate (дублировать игру)",
+                "Hide/Show (скрыть/показать игру)"
+            ]
         },
-        "affected_files": [
-          "src/gui/settings_dialog.rs",
-          "src/main.rs"
-        ]
-      },
-      {
-        "id": "BUG-003",
-        "title": "Модальные окна не имеют кнопки закрытия (X)",
-        "severity": "HIGH",
-        "description": "В отличие от Python-версии (GTK3), модальные диалоги в Rust-версии не имеют стандартной кнопки закрытия в заголовке окна, что усугубляет проблему с обрезанными кнопками.",
-        "user_impact": "При отсутствии видимых кнопок Cancel/Ok единственный способ закрыть диалог - нажать ESC или кликнуть на затемнённую область (если это реализовано)",
-        "code_analysis": {
-          "current_modal_implementation": "src/main.rs:742-752 - модальное окно создаётся как container с полупрозрачным фоном",
-          "missing_feature": "Отсутствует обработка клика по фону для закрытия (on_press не добавлен к modal container)"
+        "steps_to_reproduce": [
+            "1. Запустить Faugus Launcher (Rust версия)",
+            "2. Добавить игру через кнопку 'Add'",
+            "3. Нажать правой кнопкой мыши на игру в списке",
+            "4. Наблюдать контекстное меню с ограниченным функционалом"
+        ],
+        "evidence": {
+            "screenshot": "uploaded_image_1768545514234.png",
+            "screenshot_description": "Скриншот показывает контекстное меню с только 3 пунктами для игры 'WG2'",
+            "logs": {
+                "timestamp": "2026-01-16T06:33:12",
+                "entries": [
+                    "INFO faugus_launcher_rs::gui::main_window: Launching game: WG2",
+                    "ERROR faugus_launcher_rs::launcher::launch_controller: Failed to launch game WG2: Runner 'GE-Proton Latest (default)' is not installed"
+                ]
+            }
         },
-        "affected_files": [
-          "src/main.rs"
+        "fix_suggestion": {
+            "description": "Необходимо расширить ContextMenuMessage и view() для поддержки всех опций",
+            "changes_required": [
+                {
+                    "file": "src/gui/context_menu.rs",
+                    "action": "Добавить новые варианты в enum ContextMenuMessage: Play, Edit, Delete, Duplicate, HideShow",
+                    "code_example": "pub enum ContextMenuMessage {\n    Play,\n    Edit,\n    Delete,\n    Duplicate,\n    HideShow,\n    OpenLocation,\n    OpenPrefix,\n    ShowLogs,\n}"
+                },
+                {
+                    "file": "src/gui/context_menu.rs",
+                    "action": "Обновить struct ContextMenu для хранения информации об игре (название, playtime, hidden status)",
+                    "code_example": "pub struct ContextMenu {\n    pub game_index: usize,\n    pub game_title: String,\n    pub playtime: String,\n    pub is_hidden: bool,\n    pub position: Point,\n}"
+                },
+                {
+                    "file": "src/gui/context_menu.rs",
+                    "action": "Обновить метод view() для отрисовки всех пунктов меню",
+                    "code_example": "// Добавить заголовок с названием игры и playtime\n// Добавить кнопки Play, Edit, Delete, Duplicate, Hide/Show"
+                },
+                {
+                    "file": "src/main.rs",
+                    "action": "Добавить обработчики для новых сообщений в match msg",
+                    "code_example": "ContextMenuMessage::Play => Task::done(Message::PlayClicked),\nContextMenuMessage::Edit => Task::done(Message::ShowEditGameDialog(game_index)),\nContextMenuMessage::Delete => Task::done(Message::DeleteClicked),\nContextMenuMessage::Duplicate => Task::done(Message::DuplicateClicked),\nContextMenuMessage::HideShow => Task::done(Message::HideShowClicked),"
+                }
+            ],
+            "estimated_effort": "2-3 часа разработки"
+        },
+        "related_issues": [
+            {
+                "feature_parity_doc": "FEATURE_PARITY.md",
+                "related_sections": [
+                    "Game Management - Hide/Show games (marked as missing)",
+                    "Game Management - Duplicate game functionality (marked as missing)"
+                ]
+            }
+        ],
+        "labels": [
+            "bug",
+            "gui",
+            "context-menu",
+            "feature-parity",
+            "high-priority"
         ]
-      }
-    ],
-    "root_cause_analysis": {
-      "technical_explanation": "Проблема возникает из-за неправильной работы с Layout в Iced. В view диалогов используется паттерн: column![scrollable(...), buttons]. При этом scrollable имеет высоту Fill, а buttons - фиксированную. Когда контент scrollable превышает доступное пространство, кнопки выталкиваются за видимую область. В main.rs диалог помещается в container с фиксированной шириной, но height: Fill, что не ограничивает общую высоту содержимого.",
-      "comparison_with_python": {
-        "python_version": "GTK3 использует GtkScrolledWindow с явными размерами и GtkBox для кнопок, которые ВСЕГДА остаются видимыми внизу окна",
-        "rust_version": "Iced column![] не имеет встроенного механизма 'sticky footer' для кнопок"
-      }
-    },
-    "suggested_fixes": [
-      {
-        "fix_id": "FIX-001",
-        "description": "Ограничить высоту scrollable, оставив место для кнопок",
-        "implementation": "Использовать Length::FillPortion для scrollable и Length::Shrink для buttons, или задать максимальную высоту scrollable"
-      },
-      {
-        "fix_id": "FIX-002",
-        "description": "Задать фиксированную высоту контейнера диалога в main.rs",
-        "implementation": "Заменить .height(Length::Fill) на .height(Length::Fixed(600.0)) или динамически вычислять высоту"
-      },
-      {
-        "fix_id": "FIX-003",
-        "description": "Переместить кнопки внутрь scrollable как последний элемент",
-        "implementation": "Добавить buttons_section в конец scrollable вместо отдельного элемента column"
-      },
-      {
-        "fix_id": "FIX-004",
-        "description": "Добавить обработку клика по фону модального окна",
-        "implementation": "Обернуть modal container в mouse_area с on_press для закрытия диалога"
-      }
-    ],
-    "reproduction_steps": [
-      "1. Запустить Rust-версию: cargo run",
-      "2. Нажать кнопку 'Add' в левой панели",
-      "3. Появится диалог добавления игры",
-      "4. Попытаться найти кнопки 'Cancel' или 'Ok' в нижней части диалога",
-      "5. Кнопки отсутствуют - они скрыты за нижней границей окна",
-      "6. Повторить для кнопки 'Settings' - та же проблема с кнопками Cancel/Apply"
-    ],
-    "environment": {
-      "os": "Linux",
-      "rust_version": "Cargo.toml указывает edition 2021",
-      "iced_version": "0.13 (согласно AGENTS.md)",
-      "application_version": "0.0.1"
-    },
-    "priority": "P0 - Блокирующий баг",
-    "status": "Open"
-  }
+    }
 }
