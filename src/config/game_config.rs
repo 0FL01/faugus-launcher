@@ -8,6 +8,83 @@ use std::path::PathBuf;
 
 use crate::config::paths::Paths;
 
+/// Legacy compatibility module for deserializing Python format games.json
+mod legacy_compat {
+    use serde::{Deserialize, Deserializer};
+    use std::path::PathBuf;
+
+    /// Deserialize bool from either:
+    /// - Native bool (Rust format): true/false
+    /// - String (Python format): "MANGOHUD=1", "gamemoderun", "addapp_enabled", etc.
+    pub fn deserialize_bool_from_string_or_bool<'de, D>(deserializer: D) -> Result<bool, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum BoolOrString {
+            Bool(bool),
+            String(String),
+        }
+
+        match BoolOrString::deserialize(deserializer)? {
+            BoolOrString::Bool(b) => Ok(b),
+            BoolOrString::String(s) => Ok(!s.is_empty()),
+        }
+    }
+
+    /// Deserialize u32 from either:
+    /// - Native number (Rust format)
+    /// - String (Python format): "2", "3", etc.
+    pub fn deserialize_u32_from_string_or_number<'de, D>(deserializer: D) -> Result<u32, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum NumberOrString {
+            Number(u32),
+            String(String),
+        }
+
+        match NumberOrString::deserialize(deserializer)? {
+            NumberOrString::Number(n) => Ok(n),
+            NumberOrString::String(s) => s
+                .parse::<u32>()
+                .map_err(|_| serde::de::Error::custom(format!("Invalid u32 string: {}", s))),
+        }
+    }
+
+    /// Deserialize Option<PathBuf> from either:
+    /// - null/missing (Rust format)
+    /// - Empty string "" (Python format) -> None
+    /// - Path string (both formats)
+    pub fn deserialize_optional_path_from_string<'de, D>(
+        deserializer: D,
+    ) -> Result<Option<PathBuf>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum OptionalPath {
+            Null,
+            String(String),
+        }
+
+        Ok(match OptionalPath::deserialize(deserializer)? {
+            OptionalPath::Null => None,
+            OptionalPath::String(s) => {
+                if s.is_empty() {
+                    None
+                } else {
+                    Some(PathBuf::from(s))
+                }
+            }
+        })
+    }
+}
+
 /// Represents a single game in the launcher
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Game {
@@ -30,12 +107,24 @@ pub struct Game {
     pub game_arguments: String,
 
     /// Enable MangoHud
+    #[serde(
+        default,
+        deserialize_with = "legacy_compat::deserialize_bool_from_string_or_bool"
+    )]
     pub mangohud: bool,
 
     /// Enable GameMode
+    #[serde(
+        default,
+        deserialize_with = "legacy_compat::deserialize_bool_from_string_or_bool"
+    )]
     pub gamemode: bool,
 
     /// Disable hidraw support
+    #[serde(
+        default,
+        deserialize_with = "legacy_compat::deserialize_bool_from_string_or_bool"
+    )]
     pub disable_hidraw: bool,
 
     /// Proton fix configuration
@@ -45,6 +134,10 @@ pub struct Game {
     pub runner: String,
 
     /// AddApp checkbox state
+    #[serde(
+        default,
+        deserialize_with = "legacy_compat::deserialize_bool_from_string_or_bool"
+    )]
     pub addapp_checkbox: bool,
 
     /// AddApp configuration
@@ -54,22 +147,45 @@ pub struct Game {
     pub addapp_bat: String,
 
     /// Path to banner image
-    #[serde(default)]
+    #[serde(
+        default,
+        deserialize_with = "legacy_compat::deserialize_optional_path_from_string"
+    )]
     pub banner: Option<PathBuf>,
 
     /// Lossless scaling enabled
+    #[serde(
+        default,
+        deserialize_with = "legacy_compat::deserialize_bool_from_string_or_bool"
+    )]
     pub lossless_enabled: bool,
 
     /// Lossless scaling multiplier
+    #[serde(
+        default,
+        deserialize_with = "legacy_compat::deserialize_u32_from_string_or_number"
+    )]
     pub lossless_multiplier: u32,
 
     /// Lossless scaling flow
+    #[serde(
+        default,
+        deserialize_with = "legacy_compat::deserialize_bool_from_string_or_bool"
+    )]
     pub lossless_flow: bool,
 
     /// Lossless scaling performance mode
+    #[serde(
+        default,
+        deserialize_with = "legacy_compat::deserialize_bool_from_string_or_bool"
+    )]
     pub lossless_performance: bool,
 
     /// Lossless scaling HDR
+    #[serde(
+        default,
+        deserialize_with = "legacy_compat::deserialize_bool_from_string_or_bool"
+    )]
     pub lossless_hdr: bool,
 
     /// Total playtime in seconds
@@ -236,20 +352,59 @@ pub struct GameConfig {
     pub prefix: PathBuf,
     pub launch_arguments: String,
     pub game_arguments: String,
+    #[serde(
+        default,
+        deserialize_with = "legacy_compat::deserialize_bool_from_string_or_bool"
+    )]
     pub mangohud: bool,
+    #[serde(
+        default,
+        deserialize_with = "legacy_compat::deserialize_bool_from_string_or_bool"
+    )]
     pub gamemode: bool,
+    #[serde(
+        default,
+        deserialize_with = "legacy_compat::deserialize_bool_from_string_or_bool"
+    )]
     pub disable_hidraw: bool,
     pub protonfix: String,
     pub runner: String,
+    #[serde(
+        default,
+        deserialize_with = "legacy_compat::deserialize_bool_from_string_or_bool"
+    )]
     pub addapp_checkbox: bool,
     pub addapp: String,
     pub addapp_bat: String,
-    #[serde(default)]
+    #[serde(
+        default,
+        deserialize_with = "legacy_compat::deserialize_optional_path_from_string"
+    )]
     pub banner: Option<PathBuf>,
+    #[serde(
+        default,
+        deserialize_with = "legacy_compat::deserialize_bool_from_string_or_bool"
+    )]
     pub lossless_enabled: bool,
+    #[serde(
+        default,
+        deserialize_with = "legacy_compat::deserialize_u32_from_string_or_number"
+    )]
     pub lossless_multiplier: u32,
+    #[serde(
+        default,
+        deserialize_with = "legacy_compat::deserialize_bool_from_string_or_bool"
+    )]
     pub lossless_flow: bool,
+    #[serde(
+        default,
+        deserialize_with = "legacy_compat::deserialize_bool_from_string_or_bool"
+    )]
     pub lossless_performance: bool,
+    #[serde(
+        default,
+        deserialize_with = "legacy_compat::deserialize_bool_from_string_or_bool"
+    )]
     pub lossless_hdr: bool,
 }
 
@@ -308,5 +463,192 @@ impl From<Game> for GameConfig {
             lossless_performance: game.lossless_performance,
             lossless_hdr: game.lossless_hdr,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_deserialize_python_bool_formats() {
+        let python_json = r#"[{
+            "gameid": "test-game-1",
+            "title": "Test Game",
+            "path": "/path/to/game.exe",
+            "prefix": "/home/user/Faugus",
+            "launch_arguments": "",
+            "game_arguments": "",
+            "mangohud": "MANGOHUD=1",
+            "gamemode": "gamemoderun",
+            "disable_hidraw": "",
+            "protonfix": "",
+            "runner": "GE-Proton",
+            "addapp_checkbox": "addapp_enabled",
+            "addapp": "",
+            "addapp_bat": "",
+            "banner": "/path/to/banner.png",
+            "lossless_enabled": "true",
+            "lossless_multiplier": "2",
+            "lossless_flow": "",
+            "lossless_performance": "",
+            "lossless_hdr": "",
+            "playtime": 0,
+            "hidden": false
+        }]"#;
+
+        let games: Vec<Game> = serde_json::from_str(python_json).unwrap();
+
+        assert_eq!(games.len(), 1);
+        let game = &games[0];
+
+        assert!(game.mangohud, "mangohud should be true from 'MANGOHUD=1'");
+        assert!(game.gamemode, "gamemode should be true from 'gamemoderun'");
+        assert!(
+            !game.disable_hidraw,
+            "disable_hidraw should be false from ''"
+        );
+        assert!(
+            game.addapp_checkbox,
+            "addapp_checkbox should be true from 'addapp_enabled'"
+        );
+        assert!(
+            game.lossless_enabled,
+            "lossless_enabled should be true from 'true'"
+        );
+        assert_eq!(
+            game.lossless_multiplier, 2,
+            "lossless_multiplier should be 2 from '2'"
+        );
+        assert!(!game.lossless_flow, "lossless_flow should be false from ''");
+    }
+
+    #[test]
+    fn test_deserialize_rust_bool_formats() {
+        let rust_json = r#"[{
+            "gameid": "test-game-2",
+            "title": "Test Game 2",
+            "path": "/path/to/game2.exe",
+            "prefix": "/home/user/Faugus",
+            "launch_arguments": "",
+            "game_arguments": "",
+            "mangohud": true,
+            "gamemode": false,
+            "disable_hidraw": true,
+            "protonfix": "",
+            "runner": "GE-Proton",
+            "addapp_checkbox": false,
+            "addapp": "",
+            "addapp_bat": "",
+            "banner": null,
+            "lossless_enabled": true,
+            "lossless_multiplier": 3,
+            "lossless_flow": true,
+            "lossless_performance": false,
+            "lossless_hdr": true,
+            "playtime": 3600,
+            "hidden": false
+        }]"#;
+
+        let games: Vec<Game> = serde_json::from_str(rust_json).unwrap();
+
+        assert_eq!(games.len(), 1);
+        let game = &games[0];
+
+        assert!(game.mangohud, "mangohud should be true");
+        assert!(!game.gamemode, "gamemode should be false");
+        assert!(game.disable_hidraw, "disable_hidraw should be true");
+        assert!(!game.addapp_checkbox, "addapp_checkbox should be false");
+        assert!(game.lossless_enabled, "lossless_enabled should be true");
+        assert_eq!(
+            game.lossless_multiplier, 3,
+            "lossless_multiplier should be 3"
+        );
+        assert!(game.lossless_flow, "lossless_flow should be true");
+    }
+
+    #[test]
+    fn test_deserialize_banner_empty_string() {
+        let json = r#"[{
+            "gameid": "test-game-3",
+            "title": "Test Game 3",
+            "path": "/path/to/game3.exe",
+            "prefix": "/home/user/Faugus",
+            "launch_arguments": "",
+            "game_arguments": "",
+            "mangohud": false,
+            "gamemode": false,
+            "disable_hidraw": false,
+            "protonfix": "",
+            "runner": "GE-Proton",
+            "addapp_checkbox": false,
+            "addapp": "",
+            "addapp_bat": "",
+            "banner": "",
+            "lossless_enabled": false,
+            "lossless_multiplier": 2,
+            "lossless_flow": false,
+            "lossless_performance": false,
+            "lossless_hdr": false,
+            "playtime": 0,
+            "hidden": false
+        }]"#;
+
+        let games: Vec<Game> = serde_json::from_str(json).unwrap();
+
+        assert_eq!(games.len(), 1);
+        let game = &games[0];
+
+        assert!(
+            game.banner.is_none(),
+            "banner should be None for empty string"
+        );
+    }
+
+    #[test]
+    fn test_serialize_to_rust_format() {
+        let game = Game {
+            gameid: "test-game-4".to_string(),
+            title: "Test Game 4".to_string(),
+            path: PathBuf::from("/path/to/game4.exe"),
+            prefix: PathBuf::from("/home/user/Faugus"),
+            launch_arguments: String::new(),
+            game_arguments: String::new(),
+            mangohud: true,
+            gamemode: true,
+            disable_hidraw: false,
+            protonfix: String::new(),
+            runner: "GE-Proton".to_string(),
+            addapp_checkbox: true,
+            addapp: String::new(),
+            addapp_bat: String::new(),
+            banner: Some(PathBuf::from("/path/to/banner.png")),
+            lossless_enabled: true,
+            lossless_multiplier: 2,
+            lossless_flow: false,
+            lossless_performance: false,
+            lossless_hdr: false,
+            playtime: 0,
+            hidden: false,
+        };
+
+        let json = serde_json::to_string(&game).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+
+        assert!(
+            parsed["mangohud"].is_boolean(),
+            "mangohud should serialize as bool"
+        );
+        assert_eq!(parsed["mangohud"], true);
+        assert!(
+            parsed["gamemode"].is_boolean(),
+            "gamemode should serialize as bool"
+        );
+        assert_eq!(parsed["gamemode"], true);
+        assert!(
+            parsed["lossless_multiplier"].is_number(),
+            "lossless_multiplier should serialize as number"
+        );
+        assert_eq!(parsed["lossless_multiplier"], 2);
     }
 }

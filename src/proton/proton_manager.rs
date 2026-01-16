@@ -45,13 +45,13 @@ pub const PROTON_CONFIGS: &[ProtonConfig] = &[
     ProtonConfig {
         label: "GE-Proton",
         dir: "GE-Proton Latest",
-        api: "https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases/latest",
+        api: "https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases",
         archive_ext: ".tar.gz",
     },
     ProtonConfig {
         label: "Proton-EM",
         dir: "Proton-EM Latest",
-        api: "https://api.github.com/repos/Etaash-mathamsetty/Proton/releases/latest",
+        api: "https://api.github.com/repos/Etaash-mathamsetty/Proton/releases",
         archive_ext: ".tar.xz",
     },
 ];
@@ -80,9 +80,15 @@ impl ProtonManager {
     pub async fn get_latest_release(&self, config: &ProtonConfig) -> Result<ProtonRelease> {
         info!("Fetching latest {} release", config.label);
 
+        let url = if config.api.ends_with("/latest") {
+            config.api.to_string()
+        } else {
+            format!("{}/latest", config.api)
+        };
+
         let response = self
             .client
-            .get(config.api)
+            .get(url)
             .header("Accept", "application/vnd.github.v3+json")
             .send()
             .await
@@ -96,6 +102,49 @@ impl ProtonManager {
 
         info!("Latest {} release: {}", config.label, release.tag_name);
         Ok(release)
+    }
+
+    /// Get all Proton releases with pagination (like Python version)
+    pub async fn get_all_releases(&self, config: &ProtonConfig) -> Result<Vec<ProtonRelease>> {
+        info!("Fetching all {} releases", config.label);
+
+        let mut all_releases = Vec::new();
+        let mut page = 1u32;
+
+        loop {
+            let url = format!("{}?page={}&per_page=100", config.api, page);
+            let response = self
+                .client
+                .get(&url)
+                .header("Accept", "application/vnd.github.v3+json")
+                .send()
+                .await
+                .context("Failed to fetch releases")?;
+
+            if !response.status().is_success() {
+                anyhow::bail!("Failed to fetch releases: {}", response.status());
+            }
+
+            let releases: Vec<ProtonRelease> = response.json().await?;
+
+            if releases.is_empty() {
+                break;
+            }
+
+            // Filter releases based on config type
+            let filtered = filter_releases(&releases, config);
+            all_releases.extend(filtered);
+
+            // If we got fewer than 100 releases, it's the last page
+            if releases.len() < 100 {
+                break;
+            }
+
+            page += 1;
+        }
+
+        info!("Found {} {} releases", all_releases.len(), config.label);
+        Ok(all_releases)
     }
 
     /// Get all available Proton versions
@@ -340,6 +389,44 @@ pub fn sort_versions_descending(mut versions: Vec<String>) -> Vec<String> {
         key_b.cmp(&key_a) // Descending
     });
     versions
+}
+
+fn filter_releases(releases: &[ProtonRelease], config: &ProtonConfig) -> Vec<ProtonRelease> {
+    releases
+        .iter()
+        .filter(|r| {
+            if config.label == "GE-Proton" {
+                // Filter: starts with "GE-Proton" and >= 8-1
+                if !r.tag_name.starts_with("GE-Proton") {
+                    return false;
+                }
+                // Parse version: GE-Proton8-25 -> (8, 25)
+                if let Some(version_str) = r.tag_name.strip_prefix("GE-Proton") {
+                    if let Some((major, minor)) = parse_ge_version(version_str) {
+                        return (major, minor) >= (8, 1);
+                    }
+                }
+                false
+            } else if config.label == "Proton-EM" {
+                // Filter: starts with "EM-"
+                r.tag_name.starts_with("EM-")
+            } else {
+                true
+            }
+        })
+        .cloned()
+        .collect()
+}
+
+fn parse_ge_version(s: &str) -> Option<(u32, u32)> {
+    let parts: Vec<&str> = s.split('-').collect();
+    if parts.len() == 2 {
+        let major = parts[0].parse().ok()?;
+        let minor = parts[1].parse().ok()?;
+        Some((major, minor))
+    } else {
+        None
+    }
 }
 
 #[cfg(test)]

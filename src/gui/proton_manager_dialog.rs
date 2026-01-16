@@ -151,25 +151,22 @@ impl ProtonManagerDialog {
                     // Create async task
                     tasks.push(Task::perform(
                         async move {
-                            let release = manager.get_latest_release(config).await.ok();
-                            (index_clone, release)
+                            let releases = manager.get_all_releases(config).await.ok();
+                            (index_clone, releases)
                         },
-                        |(index, release)| {
-                            if let Some(release) = release {
-                                ProtonManagerMessage::ReleasesFetched(index, vec![release])
+                        |(index, releases)| {
+                            if let Some(releases) = releases {
+                                ProtonManagerMessage::ReleasesFetched(index, releases)
                             } else {
                                 ProtonManagerMessage::FetchError(
-                                    "Failed to fetch release".to_string(),
+                                    "Failed to fetch releases".to_string(),
                                 )
                             }
                         },
                     ));
                 }
 
-                // Return first task (others are discarded - this is a limitation of the current architecture)
-                if let Some(task) = tasks.into_iter().next() {
-                    return task;
-                }
+                return Task::batch(tasks);
             }
             ProtonManagerMessage::ReleasesFetched(tab_index, releases) => {
                 self.loading = false;
