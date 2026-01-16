@@ -134,7 +134,7 @@ impl GameLauncher {
         // Wayland driver
         if let Ok(config) = std::fs::read_to_string(Paths::config_file()) {
             if config.contains("wayland-driver=true") {
-                cmd.env("PROTON_USE_WINE_DXGI", "1");
+                cmd.env("PROTON_ENABLE_WAYLAND", "1");
             }
         }
 
@@ -148,7 +148,7 @@ impl GameLauncher {
         // WOW64
         if let Ok(config) = std::fs::read_to_string(Paths::config_file()) {
             if config.contains("enable-wow64=true") {
-                cmd.env("WINEARCH", "win64");
+                cmd.env("PROTON_USE_WOW64", "1");
             }
         }
 
