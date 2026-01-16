@@ -313,6 +313,13 @@ impl MainWindow {
                 // TODO: Filter games based on query
                 Task::none()
             }
+            Message::Tick => {
+                let dead_games = self.launch_controller.check_processes();
+                for title in dead_games {
+                    self.update_launch_status(&title, LaunchStatus::NotRunning);
+                }
+                Task::none()
+            }
             Message::LaunchMessage(msg) => {
                 use crate::launcher::LaunchMessage;
                 match msg {

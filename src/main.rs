@@ -13,7 +13,7 @@ mod tray;
 mod utils;
 
 use iced::widget::{container, mouse_area, stack, Space};
-use iced::{window, Color, Element, Length, Padding, Point, Size, Task};
+use iced::{window, Color, Element, Length, Padding, Point, Size, Subscription, Task};
 use tracing::{error, info, warn};
 
 use config::app_config::AppConfig;
@@ -166,6 +166,10 @@ impl FaugusLauncher {
 
     fn title(&self) -> String {
         self.main_window.title()
+    }
+
+    fn subscription(&self) -> Subscription<Message> {
+        iced::time::every(std::time::Duration::from_secs(1)).map(|_| Message::Tick)
     }
 
     fn update(&mut self, message: Message) -> Task<Message> {
@@ -809,6 +813,7 @@ fn main() -> iced::Result {
         FaugusLauncher::update,
         FaugusLauncher::view,
     )
+    .subscription(FaugusLauncher::subscription)
     .window(window::Settings {
         size: Size::new(1200.0, 800.0),
         ..Default::default()
