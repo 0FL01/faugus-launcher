@@ -702,41 +702,6 @@ impl MainWindow {
             .padding(10)
             .width(Length::Fill);
 
-        let edit_button = button(text(self.i18n.t("Edit")))
-            .on_press(Message::EditClicked)
-            .padding(10)
-            .width(Length::Fill);
-
-        let delete_button = button(text(self.i18n.t("Delete")))
-            .on_press(Message::DeleteClicked)
-            .padding(10)
-            .width(Length::Fill);
-
-        // Hide/Show button - dynamic text based on selected game
-        let hide_show_text = if let Some(index) = self.selected_game_index {
-            if let Some(game) = self.games.get(index) {
-                if game.hidden {
-                    self.i18n.t("Show")
-                } else {
-                    self.i18n.t("Hide")
-                }
-            } else {
-                self.i18n.t("Hide")
-            }
-        } else {
-            self.i18n.t("Hide")
-        };
-
-        let hide_show_button = button(text(hide_show_text))
-            .on_press(Message::HideShowClicked)
-            .padding(10)
-            .width(Length::Fill);
-
-        let duplicate_button = button(text(self.i18n.t("Duplicate")))
-            .on_press(Message::DuplicateClicked)
-            .padding(10)
-            .width(Length::Fill);
-
         let settings_button = button(text(self.i18n.t("Settings")))
             .on_press(Message::SettingsClicked)
             .padding(10)
@@ -752,10 +717,6 @@ impl MainWindow {
             play_kill_button,
             status_text,
             add_button,
-            edit_button,
-            delete_button,
-            hide_show_button,
-            duplicate_button,
             settings_button,
             kill_all_button,
         ]
