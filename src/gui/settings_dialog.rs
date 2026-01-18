@@ -10,6 +10,7 @@ use std::path::PathBuf;
 
 use crate::config::{AppConfig, InterfaceMode};
 use crate::gui::file_picker;
+use crate::gui::styles::DeepSpace;
 use crate::locale::I18n;
 use crate::proton::proton_manager::ProtonManager;
 
@@ -443,7 +444,8 @@ impl SettingsDialog {
             restart_notice,
         ])
         .width(Length::Fill)
-        .height(Length::FillPortion(1));
+        .height(Length::FillPortion(1))
+        .style(DeepSpace::scrollable);
 
         let content = column![
             scrollable,
@@ -455,6 +457,7 @@ impl SettingsDialog {
         container(content)
             .width(Length::Fill)
             .height(Length::Fill)
+            .style(DeepSpace::modal_container)
             .into()
     }
 
@@ -472,7 +475,8 @@ impl SettingsDialog {
                     self.languages.get(self.language_index).cloned(),
                     SettingsMessage::LanguageChanged
                 )
-                .width(Length::Fill),
+                .width(Length::Fill)
+                .style(DeepSpace::pick_list),
             ]
             .spacing(5),
             Space::with_height(Length::Fixed(10.0)),
@@ -485,23 +489,30 @@ impl SettingsDialog {
                     Some(self.config.interface_mode),
                     SettingsMessage::InterfaceModeChanged
                 )
-                .width(Length::Fill),
+                .width(Length::Fill)
+                .style(DeepSpace::pick_list),
             ]
             .spacing(5),
             Space::with_height(Length::Fixed(10.0)),
             // Checkboxes
             checkbox(i18n.t("Start maximized"), self.config.start_maximized)
-                .on_toggle(SettingsMessage::StartMaximizedToggled),
+                .on_toggle(SettingsMessage::StartMaximizedToggled)
+                .style(DeepSpace::checkbox),
             checkbox(i18n.t("Start in fullscreen"), self.config.start_fullscreen)
-                .on_toggle(SettingsMessage::StartFullscreenToggled),
+                .on_toggle(SettingsMessage::StartFullscreenToggled)
+                .style(DeepSpace::checkbox),
             checkbox(i18n.t("Show labels"), self.config.show_labels)
-                .on_toggle(SettingsMessage::ShowLabelsToggled),
+                .on_toggle(SettingsMessage::ShowLabelsToggled)
+                .style(DeepSpace::checkbox),
             checkbox(i18n.t("Smaller banners"), self.config.smaller_banners)
-                .on_toggle(SettingsMessage::SmallerBannersToggled),
+                .on_toggle(SettingsMessage::SmallerBannersToggled)
+                .style(DeepSpace::checkbox),
             checkbox(i18n.t("Monochrome icon"), self.config.mono_icon)
-                .on_toggle(SettingsMessage::MonoIconToggled),
+                .on_toggle(SettingsMessage::MonoIconToggled)
+                .style(DeepSpace::checkbox),
             checkbox(i18n.t("Show hidden games"), self.config.show_hidden)
-                .on_toggle(SettingsMessage::ShowHiddenToggled),
+                .on_toggle(SettingsMessage::ShowHiddenToggled)
+                .style(DeepSpace::checkbox),
         ]
         .spacing(5)
         .into()
@@ -520,10 +531,13 @@ impl SettingsDialog {
                 text(i18n.t("Default Prefix Location")).size(14),
                 Space::with_height(Length::Fixed(5.0)),
                 row![
-                    text_input("", &prefix_display).on_input(SettingsMessage::DefaultPrefixChanged),
+                    text_input("", &prefix_display)
+                        .on_input(SettingsMessage::DefaultPrefixChanged)
+                        .style(DeepSpace::text_input),
                     button(text("..."))
                         .on_press(SettingsMessage::BrowseDefaultPrefix)
-                        .width(Length::Fixed(50.0)),
+                        .width(Length::Fixed(50.0))
+                        .style(DeepSpace::button),
                 ]
                 .spacing(5),
             ]
@@ -535,10 +549,12 @@ impl SettingsDialog {
                 Space::with_height(Length::Fixed(5.0)),
                 row![
                     text_input("", &lossless_display)
-                        .on_input(SettingsMessage::LosslessLocationChanged),
+                        .on_input(SettingsMessage::LosslessLocationChanged)
+                        .style(DeepSpace::text_input),
                     button(text("..."))
                         .on_press(SettingsMessage::BrowseLosslessLocation)
-                        .width(Length::Fixed(50.0)),
+                        .width(Length::Fixed(50.0))
+                        .style(DeepSpace::button),
                 ]
                 .spacing(5),
             ]
@@ -553,7 +569,8 @@ impl SettingsDialog {
                     self.runners.get(self.runner_index).cloned(),
                     SettingsMessage::DefaultRunnerChanged
                 )
-                .width(Length::Fill),
+                .width(Length::Fill)
+                .style(DeepSpace::pick_list),
             ]
             .spacing(5),
         ]
@@ -566,12 +583,18 @@ impl SettingsDialog {
         column![
             text(i18n.t("Performance")).size(18),
             Space::with_height(Length::Fixed(10.0)),
-            checkbox("MangoHud", self.config.mangohud).on_toggle(SettingsMessage::MangoHudToggled),
-            checkbox("GameMode", self.config.gamemode).on_toggle(SettingsMessage::GameModeToggled),
+            checkbox("MangoHud", self.config.mangohud)
+                .on_toggle(SettingsMessage::MangoHudToggled)
+                .style(DeepSpace::checkbox),
+            checkbox("GameMode", self.config.gamemode)
+                .on_toggle(SettingsMessage::GameModeToggled)
+                .style(DeepSpace::checkbox),
             checkbox(i18n.t("Disable Hidraw"), self.config.disable_hidraw)
-                .on_toggle(SettingsMessage::DisableHidrawToggled),
+                .on_toggle(SettingsMessage::DisableHidrawToggled)
+                .style(DeepSpace::checkbox),
             checkbox(i18n.t("Use discrete GPU"), self.config.discrete_gpu)
-                .on_toggle(SettingsMessage::DiscreteGpuToggled),
+                .on_toggle(SettingsMessage::DiscreteGpuToggled)
+                .style(DeepSpace::checkbox),
         ]
         .spacing(5)
         .into()
@@ -583,18 +606,23 @@ impl SettingsDialog {
             text(i18n.t("System")).size(18),
             Space::with_height(Length::Fixed(10.0)),
             checkbox(i18n.t("System tray icon"), self.config.system_tray)
-                .on_toggle(SettingsMessage::SystemTrayToggled),
+                .on_toggle(SettingsMessage::SystemTrayToggled)
+                .style(DeepSpace::checkbox),
             checkbox(i18n.t("Start on boot"), self.config.start_boot)
-                .on_toggle(SettingsMessage::StartBootToggled),
+                .on_toggle(SettingsMessage::StartBootToggled)
+                .style(DeepSpace::checkbox),
             checkbox(
                 i18n.t("Close when running a game/app"),
                 self.config.close_on_launch
             )
-            .on_toggle(SettingsMessage::CloseOnLaunchToggled),
+            .on_toggle(SettingsMessage::CloseOnLaunchToggled)
+            .style(DeepSpace::checkbox),
             checkbox(i18n.t("Disable splash window"), self.config.splash_disable)
-                .on_toggle(SettingsMessage::SplashDisableToggled),
+                .on_toggle(SettingsMessage::SplashDisableToggled)
+                .style(DeepSpace::checkbox),
             checkbox(i18n.t("Enable logging"), self.config.enable_logging)
-                .on_toggle(SettingsMessage::EnableLoggingToggled),
+                .on_toggle(SettingsMessage::EnableLoggingToggled)
+                .style(DeepSpace::checkbox),
         ]
         .spacing(5)
         .into()
@@ -606,11 +634,14 @@ impl SettingsDialog {
             text(i18n.t("Experimental")).size(18),
             Space::with_height(Length::Fixed(10.0)),
             checkbox(i18n.t("Use Wayland driver"), self.config.wayland_driver)
-                .on_toggle(SettingsMessage::WaylandDriverToggled),
+                .on_toggle(SettingsMessage::WaylandDriverToggled)
+                .style(DeepSpace::checkbox),
             checkbox(i18n.t("Enable HDR"), self.config.enable_hdr)
-                .on_toggle(SettingsMessage::EnableHdrToggled),
+                .on_toggle(SettingsMessage::EnableHdrToggled)
+                .style(DeepSpace::checkbox),
             checkbox(i18n.t("Enable WOW64"), self.config.enable_wow64)
-                .on_toggle(SettingsMessage::EnableWow64Toggled),
+                .on_toggle(SettingsMessage::EnableWow64Toggled)
+                .style(DeepSpace::checkbox),
         ]
         .spacing(5)
         .into()
@@ -623,13 +654,20 @@ impl SettingsDialog {
             Space::with_height(Length::Fixed(10.0)),
             row![
                 button(text(i18n.t("Proton Manager")).size(14))
-                    .on_press(SettingsMessage::ProtonManagerClicked),
+                    .on_press(SettingsMessage::ProtonManagerClicked)
+                    .style(DeepSpace::button),
                 Space::with_width(Length::Fixed(10.0)),
-                button(text("Winecfg").size(14)).on_press(SettingsMessage::WinecfgClicked),
+                button(text("Winecfg").size(14))
+                    .on_press(SettingsMessage::WinecfgClicked)
+                    .style(DeepSpace::button),
                 Space::with_width(Length::Fixed(10.0)),
-                button(text("Winetricks").size(14)).on_press(SettingsMessage::WinetricksClicked),
+                button(text("Winetricks").size(14))
+                    .on_press(SettingsMessage::WinetricksClicked)
+                    .style(DeepSpace::button),
                 Space::with_width(Length::Fixed(10.0)),
-                button(text(i18n.t("Run")).size(14)).on_press(SettingsMessage::RunClicked),
+                button(text(i18n.t("Run")).size(14))
+                    .on_press(SettingsMessage::RunClicked)
+                    .style(DeepSpace::button),
             ]
             .spacing(10),
         ]
@@ -643,21 +681,28 @@ impl SettingsDialog {
             text(i18n.t("Actions")).size(18),
             Space::with_height(Length::Fixed(10.0)),
             row![
-                button(text(i18n.t("Backup")).size(14)).on_press(SettingsMessage::BackupClicked),
+                button(text(i18n.t("Backup")).size(14))
+                    .on_press(SettingsMessage::BackupClicked)
+                    .style(DeepSpace::button),
                 Space::with_width(Length::Fixed(10.0)),
-                button(text(i18n.t("Restore")).size(14)).on_press(SettingsMessage::RestoreClicked),
+                button(text(i18n.t("Restore")).size(14))
+                    .on_press(SettingsMessage::RestoreClicked)
+                    .style(DeepSpace::button),
                 Space::with_width(Length::Fixed(10.0)),
                 button(text(i18n.t("Reset to Defaults")).size(14))
-                    .on_press(SettingsMessage::ResetToDefaults),
+                    .on_press(SettingsMessage::ResetToDefaults)
+                    .style(DeepSpace::button),
             ]
             .spacing(10),
             Space::with_height(Length::Fixed(10.0)),
             row![
                 button(text(i18n.t("Show Logs")).size(14))
-                    .on_press(SettingsMessage::ShowLogsClicked),
+                    .on_press(SettingsMessage::ShowLogsClicked)
+                    .style(DeepSpace::button),
                 Space::with_width(Length::Fixed(10.0)),
                 button(text(i18n.t("Clear Logs")).size(14))
-                    .on_press(SettingsMessage::ClearLogsClicked),
+                    .on_press(SettingsMessage::ClearLogsClicked)
+                    .style(DeepSpace::button),
             ]
             .spacing(10),
         ]
@@ -671,11 +716,13 @@ impl SettingsDialog {
             Space::with_width(Length::Fill),
             button(text(i18n.t("Cancel")).size(14))
                 .on_press(SettingsMessage::Cancel)
-                .width(Length::Fixed(150.0)),
+                .width(Length::Fixed(150.0))
+                .style(DeepSpace::button),
             Space::with_width(Length::Fixed(10.0)),
             button(text(i18n.t("Apply")).size(14))
                 .on_press(SettingsMessage::Confirm)
-                .width(Length::Fixed(150.0)),
+                .width(Length::Fixed(150.0))
+                .style(DeepSpace::primary_button),
         ]
         .spacing(10)
         .into()

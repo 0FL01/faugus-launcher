@@ -10,6 +10,7 @@ use std::path::PathBuf;
 
 use crate::config::{AppConfig, Game};
 use crate::gui::file_picker;
+use crate::gui::styles::DeepSpace;
 use crate::locale::I18n;
 use crate::proton::proton_manager::ProtonManager;
 
@@ -540,6 +541,7 @@ impl AddGameDialog {
         };
 
         container(content)
+            .style(DeepSpace::modal_container)
             .padding(20)
             .width(Length::Fill)
             .height(Length::Fill)
@@ -585,7 +587,8 @@ impl AddGameDialog {
             shortcuts_section,
         ])
         .width(Length::Fill)
-        .height(Length::FillPortion(1));
+        .height(Length::FillPortion(1))
+        .style(DeepSpace::scrollable);
 
         column![
             scrollable,
@@ -602,7 +605,8 @@ impl AddGameDialog {
             text(i18n.t("Title")).size(14),
             Space::with_height(Length::Fixed(5.0)),
             text_input(&i18n.t("Game Title"), &self.game_title)
-                .on_input(AddGameMessage::TitleChanged),
+                .on_input(AddGameMessage::TitleChanged)
+                .style(DeepSpace::text_input),
         ]
         .spacing(5)
         .into()
@@ -615,10 +619,13 @@ impl AddGameDialog {
             text(i18n.t("Path")).size(14),
             Space::with_height(Length::Fixed(5.0)),
             row![
-                text_input("/path/to/the/exe", &path_display).on_input(AddGameMessage::PathChanged),
+                text_input("/path/to/the/exe", &path_display)
+                    .on_input(AddGameMessage::PathChanged)
+                    .style(DeepSpace::text_input),
                 button(text("..."))
                     .on_press(AddGameMessage::BrowsePath)
-                    .width(Length::Fixed(50.0)),
+                    .width(Length::Fixed(50.0))
+                    .style(DeepSpace::button),
             ]
             .spacing(5),
         ]
@@ -634,10 +641,12 @@ impl AddGameDialog {
             Space::with_height(Length::Fixed(5.0)),
             row![
                 text_input("/path/to/the/prefix", &prefix_display)
-                    .on_input(AddGameMessage::PrefixChanged),
+                    .on_input(AddGameMessage::PrefixChanged)
+                    .style(DeepSpace::text_input),
                 button(text("..."))
                     .on_press(AddGameMessage::BrowsePrefix)
-                    .width(Length::Fixed(50.0)),
+                    .width(Length::Fixed(50.0))
+                    .style(DeepSpace::button),
             ]
             .spacing(5),
         ]
@@ -655,7 +664,8 @@ impl AddGameDialog {
                 Some(self.launcher_type),
                 AddGameMessage::LauncherTypeChanged
             )
-            .width(Length::Fill),
+            .width(Length::Fill)
+            .style(DeepSpace::pick_list),
         ]
         .spacing(5)
         .into()
@@ -671,7 +681,8 @@ impl AddGameDialog {
                 self.runners.get(self.runner_index).cloned(),
                 AddGameMessage::RunnerChanged
             )
-            .width(Length::Fill),
+            .width(Length::Fill)
+            .style(DeepSpace::pick_list),
         ]
         .spacing(5)
         .into()
@@ -683,10 +694,13 @@ impl AddGameDialog {
             text("Protonfix (UMU ID)").size(14),
             Space::with_height(Length::Fixed(5.0)),
             row![
-                text_input("UMU ID", &self.protonfix).on_input(AddGameMessage::ProtonfixChanged),
+                text_input("UMU ID", &self.protonfix)
+                    .on_input(AddGameMessage::ProtonfixChanged)
+                    .style(DeepSpace::text_input),
                 button(text("..."))
                     .on_press(AddGameMessage::OpenProtonfixUrl)
-                    .width(Length::Fixed(50.0)),
+                    .width(Length::Fixed(50.0))
+                    .style(DeepSpace::button),
             ]
             .spacing(5),
         ]
@@ -706,10 +720,13 @@ impl AddGameDialog {
             text(i18n.t("Banner")).size(14),
             Space::with_height(Length::Fixed(5.0)),
             row![
-                text_input(&i18n.t("Banner path"), &banner_display).width(Length::Fill),
+                text_input(&i18n.t("Banner path"), &banner_display)
+                    .width(Length::Fill)
+                    .style(DeepSpace::text_input),
                 button(text("..."))
                     .on_press(AddGameMessage::BrowseBanner)
-                    .width(Length::Fixed(50.0)),
+                    .width(Length::Fixed(50.0))
+                    .style(DeepSpace::button),
             ]
             .spacing(5),
         ]
@@ -742,14 +759,16 @@ impl AddGameDialog {
                     "e.g.: PROTON_USE_WINED3D=1 gamescope -W 2560 -H 1440",
                     &self.launch_arguments
                 )
-                .on_input(AddGameMessage::LaunchArgumentsChanged),
+                .on_input(AddGameMessage::LaunchArgumentsChanged)
+                .style(DeepSpace::text_input),
             ]
             .spacing(5),
             column![
                 text(i18n.t("Game Arguments")).size(14),
                 Space::with_height(Length::Fixed(5.0)),
                 text_input("e.g.: -d3d11 -fullscreen", &self.game_arguments)
-                    .on_input(AddGameMessage::GameArgumentsChanged),
+                    .on_input(AddGameMessage::GameArgumentsChanged)
+                    .style(DeepSpace::text_input),
             ]
             .spacing(5),
         ]
@@ -762,12 +781,18 @@ impl AddGameDialog {
         column![
             text(i18n.t("Options")).size(14),
             Space::with_height(Length::Fixed(5.0)),
-            checkbox("MangoHud", self.mangohud).on_toggle(AddGameMessage::MangoHudToggled),
-            checkbox("GameMode", self.gamemode).on_toggle(AddGameMessage::GameModeToggled),
+            checkbox("MangoHud", self.mangohud)
+                .on_toggle(AddGameMessage::MangoHudToggled)
+                .style(DeepSpace::checkbox),
+            checkbox("GameMode", self.gamemode)
+                .on_toggle(AddGameMessage::GameModeToggled)
+                .style(DeepSpace::checkbox),
             checkbox(i18n.t("Disable Hidraw"), self.disable_hidraw)
-                .on_toggle(AddGameMessage::DisableHidrawToggled),
+                .on_toggle(AddGameMessage::DisableHidrawToggled)
+                .style(DeepSpace::checkbox),
             row![button(text(i18n.t("Lossless Scaling Frame Generation")))
-                .on_press(AddGameMessage::LosslessClicked),]
+                .on_press(AddGameMessage::LosslessClicked)
+                .style(DeepSpace::button),]
             .padding(5),
         ]
         .spacing(5)
@@ -780,9 +805,13 @@ impl AddGameDialog {
             text(i18n.t("Tools")).size(14),
             Space::with_height(Length::Fixed(5.0)),
             row![
-                button(text("Winecfg").size(14)).on_press(AddGameMessage::WinecfgClicked),
+                button(text("Winecfg").size(14))
+                    .on_press(AddGameMessage::WinecfgClicked)
+                    .style(DeepSpace::button),
                 Space::with_width(Length::Fixed(10.0)),
-                button(text("Winetricks").size(14)).on_press(AddGameMessage::WinetricksClicked),
+                button(text("Winetricks").size(14))
+                    .on_press(AddGameMessage::WinetricksClicked)
+                    .style(DeepSpace::button),
             ]
             .spacing(10),
         ]
@@ -796,10 +825,14 @@ impl AddGameDialog {
             text(i18n.t("Shortcut")).size(14),
             Space::with_height(Length::Fixed(5.0)),
             checkbox(i18n.t("Desktop"), self.shortcut_desktop)
-                .on_toggle(AddGameMessage::ShortcutDesktopToggled),
+                .on_toggle(AddGameMessage::ShortcutDesktopToggled)
+                .style(DeepSpace::checkbox),
             checkbox(i18n.t("App Menu"), self.shortcut_appmenu)
-                .on_toggle(AddGameMessage::ShortcutAppMenuToggled),
-            checkbox("Steam", self.shortcut_steam).on_toggle(AddGameMessage::ShortcutSteamToggled),
+                .on_toggle(AddGameMessage::ShortcutAppMenuToggled)
+                .style(DeepSpace::checkbox),
+            checkbox("Steam", self.shortcut_steam)
+                .on_toggle(AddGameMessage::ShortcutSteamToggled)
+                .style(DeepSpace::checkbox),
         ]
         .spacing(5)
         .into()
@@ -830,11 +863,18 @@ impl AddGameDialog {
                 row![
                     button(text(i18n.t("Cancel")).size(14))
                         .on_press(AddGameMessage::Cancel)
-                        .width(Length::Fixed(150.0)),
+                        .width(Length::Fixed(150.0))
+                        .style(DeepSpace::button),
                     Space::with_width(Length::Fixed(10.0)),
-                    button(text(i18n.t("Ok")).size(14))
-                        .on_press(AddGameMessage::Confirm)
-                        .width(Length::Fixed(150.0)),
+                    button(text(if self.is_edit {
+                        i18n.t("Save")
+                    } else {
+                        i18n.t("Add")
+                    })
+                    .size(14))
+                    .on_press(AddGameMessage::Confirm)
+                    .width(Length::Fixed(150.0))
+                    .style(DeepSpace::primary_button),
                 ]
                 .spacing(10)
             ]
