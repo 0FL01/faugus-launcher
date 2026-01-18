@@ -1,3 +1,4 @@
+use crate::gui::styles::DeepSpace;
 use crate::locale::i18n::I18n;
 use iced::widget::{button, column, container, horizontal_rule, text};
 use iced::{Element, Length, Point};
@@ -46,50 +47,50 @@ impl ContextMenu {
                 .on_press(ContextMenuMessage::Play)
                 .width(Length::Fill)
                 .padding(8)
-                .style(button::secondary),
+                .style(DeepSpace::menu_button),
             button(text(i18n.t("Edit")))
                 .on_press(ContextMenuMessage::Edit)
                 .width(Length::Fill)
                 .padding(8)
-                .style(button::secondary),
+                .style(DeepSpace::menu_button),
             button(text(i18n.t("Delete")))
                 .on_press(ContextMenuMessage::Delete)
                 .width(Length::Fill)
                 .padding(8)
-                .style(button::secondary),
+                .style(DeepSpace::menu_button),
             button(text(i18n.t("Duplicate")))
                 .on_press(ContextMenuMessage::Duplicate)
                 .width(Length::Fill)
                 .padding(8)
-                .style(button::secondary),
+                .style(DeepSpace::menu_button),
             button(text(hide_show_label))
                 .on_press(ContextMenuMessage::ToggleHidden)
                 .width(Length::Fill)
                 .padding(8)
-                .style(button::secondary),
+                .style(DeepSpace::menu_button),
             horizontal_rule(1),
             button(text(i18n.t("Open game location")))
                 .on_press(ContextMenuMessage::OpenLocation)
                 .width(Length::Fill)
                 .padding(8)
-                .style(button::secondary),
+                .style(DeepSpace::menu_button),
             button(text(i18n.t("Open prefix location")))
                 .on_press(ContextMenuMessage::OpenPrefix)
                 .width(Length::Fill)
                 .padding(8)
-                .style(button::secondary),
+                .style(DeepSpace::menu_button),
             button(text(i18n.t("Show logs")))
                 .on_press(ContextMenuMessage::ShowLogs)
                 .width(Length::Fill)
                 .padding(8)
-                .style(button::secondary),
+                .style(DeepSpace::menu_button),
         ]
         .spacing(2);
 
         container(content)
             .width(Length::Fixed(220.0))
             .padding(4)
-            .style(container::bordered_box)
+            .style(DeepSpace::modal_container)
             .into()
     }
 }

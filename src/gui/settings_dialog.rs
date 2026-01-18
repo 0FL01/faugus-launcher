@@ -463,7 +463,7 @@ impl SettingsDialog {
         container(content)
             .width(Length::Fill)
             .height(Length::Fill)
-            .padding(20) // Add padding to avoid rounded corners
+            .padding(20)
             .style(DeepSpace::modal_container)
             .into()
     }

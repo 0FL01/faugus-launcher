@@ -396,7 +396,8 @@ impl MainWindow {
         let layout = container(column![header, main_content].spacing(10))
             .padding(20)
             .width(Length::Fill)
-            .height(Length::Fill);
+            .height(Length::Fill)
+            .style(DeepSpace::main_window_container);
 
         if let Some(error) = &self.show_error_dialog {
             let error_modal = container(

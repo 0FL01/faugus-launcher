@@ -256,4 +256,11 @@ impl DeepSpace {
         }
     }
 
+    pub fn main_window_container(_theme: &iced::Theme) -> container::Style {
+        container::Style {
+            background: Some(colors::MODAL_SURFACE.into()),
+            text_color: Some(colors::TEXT_PRIMARY),
+            ..Default::default()
+        }
+    }
 }
