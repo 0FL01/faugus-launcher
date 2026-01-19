@@ -671,7 +671,8 @@ impl AddGameDialog {
                 AddGameMessage::LauncherTypeChanged
             )
             .width(Length::Fill)
-            .style(DeepSpace::pick_list),
+            .style(DeepSpace::pick_list)
+            .menu_style(DeepSpace::menu),
         ]
         .spacing(5)
         .into()
@@ -688,7 +689,8 @@ impl AddGameDialog {
                 AddGameMessage::RunnerChanged
             )
             .width(Length::Fill)
-            .style(DeepSpace::pick_list),
+            .style(DeepSpace::pick_list)
+            .menu_style(DeepSpace::menu),
         ]
         .spacing(5)
         .into()

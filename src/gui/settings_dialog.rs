@@ -483,7 +483,8 @@ impl SettingsDialog {
                     SettingsMessage::LanguageChanged
                 )
                 .width(Length::Fill)
-                .style(DeepSpace::pick_list),
+                .style(DeepSpace::pick_list)
+                .menu_style(DeepSpace::menu),
             ]
             .spacing(5),
             Space::with_height(Length::Fixed(10.0)),
@@ -497,7 +498,8 @@ impl SettingsDialog {
                     SettingsMessage::InterfaceModeChanged
                 )
                 .width(Length::Fill)
-                .style(DeepSpace::pick_list),
+                .style(DeepSpace::pick_list)
+                .menu_style(DeepSpace::menu),
             ]
             .spacing(5),
             Space::with_height(Length::Fixed(10.0)),
@@ -577,7 +579,8 @@ impl SettingsDialog {
                     SettingsMessage::DefaultRunnerChanged
                 )
                 .width(Length::Fill)
-                .style(DeepSpace::pick_list),
+                .style(DeepSpace::pick_list)
+                .menu_style(DeepSpace::menu),
             ]
             .spacing(5),
         ]

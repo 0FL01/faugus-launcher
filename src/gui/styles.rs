@@ -263,4 +263,18 @@ impl DeepSpace {
             ..Default::default()
         }
     }
+
+    pub fn menu(_theme: &iced::Theme) -> iced::widget::overlay::menu::Style {
+        iced::widget::overlay::menu::Style {
+            text_color: colors::TEXT_PRIMARY,
+            background: colors::MODAL_SURFACE.into(),
+            border: Border {
+                color: colors::ACCENT,
+                width: 1.0,
+                radius: 8.0.into(),
+            },
+            selected_text_color: Color::BLACK,
+            selected_background: colors::ACCENT.into(),
+        }
+    }
 }
