@@ -12,6 +12,9 @@ on:
         required: false
         type: boolean
         default: false
+  push:
+    branches:
+      - main
 
 jobs:
   build:
@@ -20,8 +23,8 @@ jobs:
       contents: write
     env:
       CARGO_TERM_COLOR: always
-      APP_NAME: faugus-launcher-rs
-      BIN_NAME: faugus-launcher-rs
+      APP_NAME: faugus-launcher
+      BIN_NAME: faugus-launcher
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -59,7 +62,12 @@ jobs:
 
       - name: Prepare staging
         run: |
-          VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
+          BASE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
+          if [ "$GITHUB_EVENT_NAME" == "push" ]; then
+            VERSION="${BASE_VERSION}.nightly.${GITHUB_SHA::7}"
+          else
+            VERSION="$BASE_VERSION"
+          fi
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
           # Binaries
@@ -77,14 +85,14 @@ jobs:
           
           # Desktop Entry
           mkdir -p dist/root/usr/share/applications
-          cat > dist/root/usr/share/applications/faugus-launcher-rs.desktop <<EOF
+          cat > dist/root/usr/share/applications/io.github.Faugus.faugus-launcher.desktop <<EOF
           [Desktop Entry]
           Categories=Game;Utility;
           Comment=Lightweight launcher for Windows games on Linux using UMU-Launcher
           Exec=${BIN_NAME} %f
           Icon=faugus-launcher
           MimeType=application/x-ms-dos-executable;application/x-msi;application/x-ms-shortcut;application/x-bat;text/x-ms-regedit
-          Name=Faugus Launcher (Rust)
+          Name=Faugus Launcher
           Terminal=false
           Type=Application
           StartupNotify=true
@@ -157,11 +165,11 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: faugus-launcher-packages
+          name: ${{ github.event_name == 'push' && format('faugus-launcher-packages-nightly-{0}', github.sha) || 'faugus-launcher-packages' }}
           path: dist/out
 
       - name: Create GitHub Release
-        if: ${{ inputs.create_release == true }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.create_release == true }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.release_tag }}
