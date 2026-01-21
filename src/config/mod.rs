@@ -2,6 +2,7 @@
 // Manages application configuration, game data, and paths
 
 pub mod app_config;
+pub mod envar;
 pub mod game_config;
 pub mod paths;
 

@@ -7,8 +7,10 @@ use std::path::PathBuf;
 use std::process::Command;
 use sysinfo::{Pid, System};
 use tokio::process::Command as AsyncCommand;
-use tracing::info;
+use tracing::{debug, info, warn};
 
+use crate::config::app_config::AppConfig;
+use crate::config::envar;
 use crate::config::paths::Paths;
 use crate::config::Game;
 use crate::proton::runner_resolver;
@@ -34,7 +36,22 @@ impl GameLauncher {
 
         // Build the command
         let umu_run = Self::get_umu_run()?;
-        let mut cmd = AsyncCommand::new(&umu_run);
+
+        // Check if GameMode is enabled - wrap with gamemoderun prefix if so
+        let mut cmd = if game.gamemode {
+            if let Some(gamemoderun) = Paths::gamemoderun() {
+                info!("Enabling GameMode as command prefix");
+                let mut cmd = AsyncCommand::new(&gamemoderun);
+                cmd.arg(&umu_run);
+                cmd
+            } else {
+                // GameMode requested but not installed - proceed without it
+                info!("GameMode requested but not found, proceeding without it");
+                AsyncCommand::new(&umu_run)
+            }
+        } else {
+            AsyncCommand::new(&umu_run)
+        };
 
         // Set environment variables
         Self::setup_environment(&mut cmd, game)?;
@@ -96,7 +113,19 @@ impl GameLauncher {
 
     /// Set up environment variables for the game
     fn setup_environment(cmd: &mut tokio::process::Command, game: &Game) -> Result<()> {
-        // Wine prefix
+        // Load envar.txt first (global env vars, overridden by game-specific later)
+        let global_env_vars = envar::load_envar_txt();
+        if !global_env_vars.is_empty() {
+            debug!(
+                "Applying {} environment variables from envar.txt",
+                global_env_vars.len()
+            );
+            for (key, value) in &global_env_vars {
+                cmd.env(key, value);
+            }
+        }
+
+        // Wine prefix (game-specific, overrides envar.txt if set there)
         cmd.env("WINEPREFIX", &game.prefix);
 
         // Proton runner
@@ -118,54 +147,68 @@ impl GameLauncher {
             }
         }
 
-        // GameMode
-        if game.gamemode {
-            if let Some(gamemoderun) = Paths::gamemoderun() {
-                info!("Enabling GameMode");
-                cmd.env("LD_PRELOAD", gamemoderun.to_string_lossy().to_string());
-            }
-        }
-
         // Disable hidraw
         if game.disable_hidraw {
-            cmd.env("WINE_DISABLE_DISABLE_HIDRAW", "1");
+            cmd.env("WINE_DISABLE_HIDRAW", "1");
         }
 
-        // Wayland driver
-        if let Ok(config) = std::fs::read_to_string(Paths::config_file()) {
-            if config.contains("wayland-driver=true") {
-                cmd.env("PROTON_ENABLE_WAYLAND", "1");
+        // Load config.ini using structured AppConfig
+        let app_config = match AppConfig::load() {
+            Ok(config) => config,
+            Err(e) => {
+                warn!("Failed to load config.ini, using defaults: {}", e);
+                AppConfig::default()
             }
+        };
+
+        // Wayland driver
+        if app_config.wayland_driver {
+            cmd.env("PROTON_ENABLE_WAYLAND", "1");
         }
 
         // HDR
-        if let Ok(config) = std::fs::read_to_string(Paths::config_file()) {
-            if config.contains("enable-hdr=true") {
-                cmd.env("ENABLE_HDR", "1");
-            }
+        if app_config.enable_hdr {
+            cmd.env("ENABLE_HDR", "1");
         }
 
         // WOW64
-        if let Ok(config) = std::fs::read_to_string(Paths::config_file()) {
-            if config.contains("enable-wow64=true") {
-                cmd.env("PROTON_USE_WOW64", "1");
-            }
+        if app_config.enable_wow64 {
+            cmd.env("PROTON_USE_WOW64", "1");
         }
 
-        // Lossless scaling
+        // Lossless scaling - uses LSFG_* environment variables (Linux native)
+        // See: https://github.com/Fir3element/Lossless-Scaling
         if game.lossless_enabled {
-            if let Some(lossless_dll) = Paths::find_lossless_dll() {
-                info!("Enabling Lossless Scaling");
-                cmd.env("WINEDLLOVERRIDES", "dxgi=n");
-                cmd.env("LD_PRELOAD", lossless_dll.to_string_lossy().to_string());
+            info!("Enabling Lossless Scaling via LSFG environment variables");
+            // Enable legacy mode for Wine/Proton compatibility
+            cmd.env("LSFG_LEGACY", "1");
+
+            // Map multiplier if > 0
+            if game.lossless_multiplier > 0 {
+                cmd.env("LSFG_MULTIPLIER", game.lossless_multiplier.to_string());
             }
+
+            // Map performance mode (1 for enabled, 0 for disabled)
+            cmd.env(
+                "LSFG_PERFORMANCE_MODE",
+                if game.lossless_performance { "1" } else { "0" },
+            );
+
+            // Map HDR mode (1 for enabled, 0 for disabled)
+            cmd.env("LSFG_HDR_MODE", if game.lossless_hdr { "1" } else { "0" });
+
+            // Conservative mapping for flow scale:
+            // Only set LSFG_FLOW_SCALE to 1.0 when explicitly enabled, otherwise omit.
+            // This follows the principle of minimal environment variable pollution.
+            if game.lossless_flow {
+                cmd.env("LSFG_FLOW_SCALE", "1.0");
+            }
+            // Note: Not overriding WINEDLLOVERRIDES to preserve user configurations
         }
 
-        // discrete GPU
-        if let Ok(config) = std::fs::read_to_string(Paths::config_file()) {
-            if config.contains("discrete-gpu=true") {
-                cmd.env("__GLX_VENDOR_LIBRARY_NAME", "nvidia");
-            }
+        // Discrete GPU
+        if app_config.discrete_gpu {
+            cmd.env("__GLX_VENDOR_LIBRARY_NAME", "nvidia");
         }
 
         // Proton fixes
@@ -175,12 +218,10 @@ impl GameLauncher {
         }
 
         // Logging
-        if let Ok(config) = std::fs::read_to_string(Paths::config_file()) {
-            if config.contains("enable-logging=true") {
-                let _log_file = Paths::logs_dir().join(format!("{}.log", game.gameid));
-                cmd.env("WINEDEBUG", "+all");
-                cmd.env("WINE_MONO_TRACE", "E:System.Windows.Forms");
-            }
+        if app_config.enable_logging {
+            let _log_file = Paths::logs_dir().join(format!("{}.log", game.gameid));
+            cmd.env("WINEDEBUG", "+all");
+            cmd.env("WINE_MONO_TRACE", "E:System.Windows.Forms");
         }
 
         Ok(())

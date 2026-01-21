@@ -172,8 +172,6 @@ impl Paths {
     }
 
     /// Get path to envar.txt (legacy compatibility)
-    /// TODO: Use for envar.txt reading/writing (Python compat)
-    #[allow(dead_code)]
     pub fn envar_txt() -> PathBuf {
         Self::config_dir().join("envar.txt")
     }
@@ -277,6 +275,8 @@ impl Paths {
     }
 
     /// Steam common games directory
+    /// Note: Currently unused but kept for potential future use/compatibility
+    #[allow(dead_code)]
     pub fn steam_common_dirs() -> Vec<PathBuf> {
         let home = env::var("HOME").unwrap_or_else(|_| "/".to_string());
         let home_path = PathBuf::from(&home);
@@ -294,6 +294,8 @@ impl Paths {
     }
 
     /// Find Lossless scaling DLL
+    /// Note: Previously used for LD_PRELOAD approach; kept for compatibility
+    #[allow(dead_code)]
     pub fn find_lossless_dll() -> Option<PathBuf> {
         for common_dir in Self::steam_common_dirs() {
             let dll_path = common_dir.join("Lossless Scaling/Lossless.dll");

@@ -30,6 +30,15 @@ Binary location: `target/release/faugus-launcher-rs`
 ./target/release/faugus-launcher-rs
 ```
 
+#### Development run
+```bash
+# Run the GUI application
+cargo run
+
+# Run the CLI launcher for a specific game
+cargo run --bin faugus-run -- --game <id>
+```
+
 ### Install system-wide (optional)
 ```bash
 sudo cp target/release/faugus-launcher-rs /usr/local/bin/faugus-launcher

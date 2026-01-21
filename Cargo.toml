@@ -4,6 +4,15 @@ version = "0.0.1"
 edition = "2021"
 license = "MIT"
 authors = ["@0FL01"]
+default-run = "faugus-launcher-rs"
+
+[[bin]]
+name = "faugus-run"
+path = "src/bin/faugus-run.rs"
+
+[lib]
+name = "faugus_launcher_rs"
+path = "src/lib.rs"
 
 [lints.rust]
 unsafe_code = "forbid"
