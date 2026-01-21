@@ -194,6 +194,107 @@ sudo install -m 755 target/release/faugus-launcher-rs /usr/local/bin/
 Exec=/usr/local/bin/faugus-run --game %u
 ```
 
+## Packaging Verification (Iteration 3)
+
+### Overview
+Automated script to verify that both binaries (`faugus-launcher-rs` and `faugus-run`) are properly included in package distributions before release.
+
+### Verification Script
+
+**Location**: `scripts/verify-package.sh`
+
+**Purpose**:
+- Checks both binaries exist in `target/release/`
+- Simulates package staging workflow (creates `dist/root/usr/bin/`)
+- Validates binaries are included in mock archive
+- Shows commands for inspecting actual package files
+
+**Usage**:
+```bash
+# Build release binaries first
+cargo build --release --bins
+
+# Run verification script
+bash scripts/verify-package.sh
+```
+
+**Script Output**:
+- Step 1: Checks binaries in build directory
+- Step 2: Simulates package staging (copies binaries to `dist/root/usr/bin/`)
+- Step 3: Creates mock archive for inspection
+- Step 4: Shows package inspection commands
+- Step 5: Validates both binaries are packaged
+- Step 6: Summary and next steps
+
+**Exit Codes**:
+- `0`: Verification passed (both binaries packaged)
+- `1`: Verification failed (missing binary or error)
+
+### Manual Testing Checklist
+
+After running verification script, perform manual end-to-end testing:
+
+1. **Build packages locally**:
+   ```bash
+   cargo build --release --bins
+   # Note: Actual package building handled by CI workflow
+   ```
+
+2. **Run verification script**:
+   ```bash
+   bash scripts/verify-package.sh
+   # Expected: ✓ All checks pass
+   ```
+
+3. **Install package on test system**:
+   ```bash
+   # DEB (Debian/Ubuntu)
+   sudo dpkg -i faugus-launcher_*.deb
+
+   # RPM (Fedora/openSUSE)
+   sudo rpm -i faugus-launcher-*.rpm
+
+   # Arch (pacman)
+   sudo pacman -U faugus-launcher-*.pkg.tar.zst
+   ```
+
+4. **Verify binaries installed**:
+   ```bash
+   ls -lh /usr/bin/faugus-launcher-rs /usr/bin/faugus-run
+   # Expected: Both binaries present and executable
+   ```
+
+5. **Create Steam shortcut via Rust launcher UI**:
+   - Launch `faugus-launcher-rs`
+   - Add or edit a game
+   - Enable "Create Steam shortcut" option
+   - Save game configuration
+
+6. **Verify Steam shortcut Exec line**:
+   ```bash
+   # View generated .desktop file
+   cat ~/.local/share/applications/faugus-launcher-*.desktop
+
+   # Check Exec line points to faugus-run:
+   Exec=/usr/bin/faugus-run --game <gameid>
+   # OR: Exec=/usr/local/bin/faugus-run --game <gameid>
+   ```
+
+7. **Launch game from Steam**:
+   - Open Steam client
+   - Find game in Library
+   - Click "Play"
+   - **Expected**: Game launches via UMU-Launcher without errors
+
+8. **Verify logs**:
+   ```bash
+   # Check launcher logs
+   cat ~/.local/share/faugus-launcher/logs/<gameid>.log
+
+   # Verify UMU-Launcher was called
+   # Verify no Python errors (faugus_run.py should NOT be invoked)
+   ```
+
 ## Clippy Compliance
 
 - ✅ All clippy warnings addressed
