@@ -788,7 +788,6 @@ impl FaugusLauncher {
             .width(Length::Fixed(800.0))
             .max_height(700.0)
             .padding(20)
-            .style(container::bordered_box)
             .into(),
 
             DialogState::Confirmation(dialog) => dialog.view(self.main_window.i18n()),
