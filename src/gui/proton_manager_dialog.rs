@@ -5,6 +5,7 @@ use iced::widget::{button, column, container, horizontal_rule, row, scrollable, 
 use iced::{Alignment, Element, Length, Task};
 use std::path::PathBuf;
 
+use crate::gui::styles::DeepSpace;
 use crate::locale::I18n;
 use crate::proton::proton_manager::{ProtonManager, ProtonRelease, PROTON_CONFIGS};
 
@@ -331,19 +332,22 @@ impl ProtonManagerDialog {
             column![]
         };
 
-        column![
-            tabs,
-            Space::with_height(Length::Fixed(10.0)),
-            horizontal_rule(1),
-            Space::with_height(Length::Fixed(10.0)),
-            content,
-            error_section,
-            progress_section,
-            Space::with_height(Length::Fixed(10.0)),
-            buttons,
-        ]
-        .spacing(5)
-        .padding(20)
+        container(
+            column![
+                tabs,
+                Space::with_height(Length::Fixed(10.0)),
+                horizontal_rule(1),
+                Space::with_height(Length::Fixed(10.0)),
+                content,
+                error_section,
+                progress_section,
+                Space::with_height(Length::Fixed(10.0)),
+                buttons,
+            ]
+            .spacing(5)
+            .padding(20),
+        )
+        .style(DeepSpace::modal_container)
         .into()
     }
 
@@ -352,14 +356,22 @@ impl ProtonManagerDialog {
         let mut tabs = row![];
 
         for (index, config) in PROTON_CONFIGS.iter().enumerate() {
-            let _is_selected = self.selected_tab == index;
+            let is_selected = self.selected_tab == index;
             let tab_button = button(text(config.label).size(14))
-                .on_press(ProtonManagerMessage::TabSelected(index));
+                .on_press(ProtonManagerMessage::TabSelected(index))
+                .style(if is_selected {
+                    DeepSpace::primary_button
+                } else {
+                    DeepSpace::button
+                });
 
             tabs = tabs.push(tab_button);
         }
 
-        container(tabs.spacing(10)).padding(10).into()
+        container(tabs.spacing(10))
+            .padding(10)
+            .style(DeepSpace::transparent_container)
+            .into()
     }
 
     /// View content area
@@ -378,7 +390,9 @@ impl ProtonManagerDialog {
             return column![
                 text("No releases found").size(14),
                 Space::with_height(Length::Fixed(10.0)),
-                button(text("Refresh").size(14)).on_press(ProtonManagerMessage::RefreshClicked),
+                button(text("Refresh").size(14))
+                    .on_press(ProtonManagerMessage::RefreshClicked)
+                    .style(DeepSpace::button),
             ]
             .spacing(5)
             .into();
@@ -395,6 +409,7 @@ impl ProtonManagerDialog {
         scrollable(release_list.spacing(5))
             .width(Length::Fill)
             .height(Length::Fixed(400.0))
+            .style(DeepSpace::scrollable)
             .into()
     }
 
@@ -415,7 +430,9 @@ impl ProtonManagerDialog {
             "Download".to_string()
         };
 
-        let action_button = button(text(button_text).size(12)).width(Length::Fixed(120.0));
+        let action_button = button(text(button_text).size(12))
+            .width(Length::Fixed(120.0))
+            .style(DeepSpace::button);
 
         let action_button = if release.downloading {
             action_button
@@ -464,11 +481,14 @@ impl ProtonManagerDialog {
     /// View buttons
     fn view_buttons(&self, i18n: &I18n) -> Element<'_, ProtonManagerMessage> {
         row![
-            button(text("Refresh").size(14)).on_press(ProtonManagerMessage::RefreshClicked),
+            button(text("Refresh").size(14))
+                .on_press(ProtonManagerMessage::RefreshClicked)
+                .style(DeepSpace::button),
             Space::with_width(Length::Fill),
             button(text(i18n.t("Close")).size(14))
                 .on_press(ProtonManagerMessage::Close)
-                .width(Length::Fixed(100.0)),
+                .width(Length::Fixed(100.0))
+                .style(DeepSpace::primary_button),
         ]
         .spacing(10)
         .into()
